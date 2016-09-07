@@ -62,10 +62,10 @@ SALTSTACK="RUN wget https\\://copr.fedoraproject.org/coprs/saltstack/zeromq4/rep
 sed -e "s:VERSION:12.04:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > out/generic/Dockerfile.ubuntu12
 sed -e "s:VERSION:14.04:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > out/generic/Dockerfile.ubuntu14
 sed -e "s:VERSION:16.04:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > out/generic/Dockerfile.ubuntu16
-#sed -e "s:VERSION:wheezy:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${WHEEZY_BACKPORTS}:g" docker/Dockerfile.debian.seed > out/generic//Dockerfile.debianwheezy
-#sed -e "s:VERSION:jessie:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" docker/Dockerfile.debian.seed > out/generic/Dockerfile.debianjessie
-#sed -e "s:VERSION:6:g"      -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK:${SALTSTACK}:g" docker/Dockerfile.centos.seed > out/generic/Dockerfile.centos6
-#sed -e "s:VERSION:7:g"      -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > out/generic/Dockerfile.centos7
+sed -e "s:VERSION:wheezy:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${WHEEZY_BACKPORTS}:g" docker/Dockerfile.debian.seed > out/generic//Dockerfile.debianwheezy
+sed -e "s:VERSION:jessie:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" docker/Dockerfile.debian.seed > out/generic/Dockerfile.debianjessie
+sed -e "s:VERSION:6:g"      -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK:${SALTSTACK}:g" docker/Dockerfile.centos.seed > out/generic/Dockerfile.centos6
+sed -e "s:VERSION:7:g"      -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > out/generic/Dockerfile.centos7
 
 # Cleanup log
 \rm -f *~ &> /dev/null
@@ -87,7 +87,7 @@ function cleanup {
 
 # Deleting old containers/images
 #wait before cleaning up
-# cleanup 
+cleanup 
 
 # #################################################################################################################
 # INSTALLATION TESTS
