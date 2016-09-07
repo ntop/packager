@@ -1,29 +1,20 @@
 FROM centos:VERSION
 MAINTAINER Alfredo Cardigliano <cardigliano@ntop.org>
 
-RUN yum -y update
-RUN yum -y -q install wget epel-release
-
-RUN wget -q http://packages.ntop.org/centosSTABLE/ntop.repo -O ntop.repo
-RUN mv ntop.repo /etc/yum.repos.d/
-RUN wget -q http://packages.ntop.org/centosSTABLE/epel-VERSION.repo -O epel.repo
-RUN mv epel.repo /etc/yum.repos.d/
+RUN yum -y update && \
+    yum -y -q install wget epel-release && \
+    wget -q http://packages.ntop.org/centosSTABLE/ntop.repo -O ntop.repo && \
+    mv ntop.repo /etc/yum.repos.d/ && \
+    wget -q http://packages.ntop.org/centosSTABLE/epel-VERSION.repo -O epel.repo && \
+    mv epel.repo /etc/yum.repos.d/
 
 SALTSTACK
 
-RUN yum -y -q erase zeromq3 || true
-RUN yum clean all
-RUN yum -y update
-RUN yum -y install pfring n2disk nprobe ntopng ntopng-data cento pfring-drivers-zc-dkms
+RUN yum -y -q erase zeromq3 ; \
+    yum clean all && \
+    yum -y update
 
-RUN pfcount -h       > /dev/null
-RUN nprobe -h        > /dev/null
-RUN ntopng -h        > /dev/null
-RUN n2disk -h        > /dev/null
-RUN n2disk10g -h     > /dev/null
-RUN disk2n -h        > /dev/null
-RUN cento -h         > /dev/null
-RUN cento-ids -h     > /dev/null
-RUN cento-bridge -h  > /dev/null
+RUN yum -y install PACKAGES_LIST
 
-RUN yum -y -q remove pfring nprobe ntopng ntopng-data n2disk cento
+COPY ENTRYPOINT_PATH /tmp
+ENTRYPOINT ["/tmp/ENTRYPOINT_SH"]

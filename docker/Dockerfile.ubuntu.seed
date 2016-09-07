@@ -1,27 +1,15 @@
 FROM ubuntu:VERSION
 MAINTAINER Luca Deri <deri@ntop.org>
 
-RUN apt-get update
-RUN apt-get -y upgrade
-RUN apt-get -y -q install wget lsb-release net-tools ethtool
+RUN apt-get update && \
+    apt-get -y -q install wget lsb-release net-tools ethtool && \
+    wget -q http://aptSTABLE.ntop.org/VERSION/all/apt-ntopSTABLE.deb && \
+    dpkg -i apt-ntopSTABLE.deb && \
+    rm -f apt-ntopSTABLE.deb && \
+    apt-get clean all && \
+    apt-get update
 
-RUN wget -q http://aptSTABLE.ntop.org/VERSION/all/apt-ntopSTABLE.deb
-RUN dpkg -i apt-ntopSTABLE.deb
-RUN rm -f apt-ntopSTABLE.deb
+RUN apt-get -y install PACKAGES_LIST
 
-RUN apt-get clean all
-RUN apt-get update
-RUN apt-get -y install pfring nprobe ntopng ntopng-data n2disk cento pfring-drivers-zc-dkms
-
-RUN pfcount -h       > /dev/null
-RUN nprobe -h        > /dev/null
-RUN ntopng -h        > /dev/null
-RUN n2disk -h        > /dev/null
-RUN n2disk10g -h     > /dev/null
-RUN disk2n -h        > /dev/null
-RUN cento -h         > /dev/null
-RUN cento-ids -h     > /dev/null
-RUN cento-bridge -h  > /dev/null
-
-RUN apt-get -y -q remove pfring nprobe ntopng ntopng-data n2disk cento
-RUN dpkg -r apt-ntopSTABLE
+COPY ENTRYPOINT_PATH /tmp
+ENTRYPOINT ["/tmp/ENTRYPOINT_SH"]
