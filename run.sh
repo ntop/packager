@@ -95,7 +95,7 @@ cleanup
 # Build docker images for each supported distro and for each softare product so to test everything independently
 # #################################################################################################################
 
-FAILURES=1
+FAILURES=0
 FAILED_IMAGES=""
 IMAGES=""
 
@@ -144,7 +144,7 @@ for ENTRYPOINT in entrypoints/*.sh; do
 done
 
 if [ "$FAILURES" -ne "0" ]; then
-    echo "Unable to build docker images: ${FAILED_IMAGES}" | mail -s "${TAG} packages installation failed on $FAILURES systems" -r $MAIL_FROM $MAIL_TO
+    echo "Unable to build docker images: ${FAILED_IMAGES}" | mail -s "${TAG} packages INSTALLATION failed on $FAILURES images" -r $MAIL_FROM $MAIL_TO
 else
     echo "All docker images built correctly." | mail -s "${TAG} packages installation completed successfully" -r  $MAIL_FROM $MAIL_TO
 fi
@@ -157,15 +157,31 @@ fi
 # Now that the docker containers have been successfully built it's time to actually test the installed software
 # #################################################################################################################
 
+FAILURES=0
+FAILED_IMAGES=""
+
 for IMG in ${IMAGES}; do
     if [[ $IMG ]]; then
-	echo "Testing ${IMG}"
-	${DOCKER} run ${IMG} test
+	echo -n "Testing ${IMG}... "
+	${DOCKER} run ${IMG} test &> out/${IMG}${STABLE_SUFFIX}_test.log
 	if [ $? != 0 ]; then
-	    echo "Testing for ${IMG} failed."
+	    echo "FAIL Failed to execute: ${DOCKER} run ${IMG} test [see out/${IMG}${STABLE_SUFFIX}_test.log for more details]"
+	   let FAILURES=FAILURES+1
+	   FAILED_IMAGES="${IMG} ${FAILED_IMAGES}"
+	   # Sending mail with log
+	   /bin/cat out/${IMG}${STABLE_SUFFIX}_test.log | mail -s "Packages TEST failed for ${IMG}" -r $MAIL_FROM $MAIL_TO
+	else
+	    echo "OK"
 	fi
     fi
 done
 
+if [ "$FAILURES" -ne "0" ]; then
+    echo "Unable to TEST docker images: ${FAILED_IMAGES}" | mail -s "${TAG} packages INSTALLATION failed on $FAILURES images" -r $MAIL_FROM $MAIL_TO
+else
+    echo "All docker images test correctly." | mail -s "${TAG} packages test completed successfully" -r  $MAIL_FROM $MAIL_TO
+fi
+
 # Cleaning up containers/images
+# don't clean up the images/containers here, they may be used later
 # cleanup
