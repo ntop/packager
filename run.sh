@@ -136,6 +136,9 @@ for ENTRYPOINT in entrypoints/*.sh; do
 	   let FAILURES=FAILURES+1
 	   FAILED_IMAGES="${IMG} ${FAILED_IMAGES}"
 	   # Sending mail with log
+	   if [[ ! -s out/${IMG}${STABLE_SUFFIX}.log ]]; then
+	       echo "<< no log output during the build phase >>" >  out/${IMG}${STABLE_SUFFIX}.log
+	   fi
 	   /bin/cat out/${IMG}${STABLE_SUFFIX}.log | mail -s "Packages installation failed on ${IMG}" -r $MAIL_FROM $MAIL_TO
 	else
 	    IMAGES="${IMAGES} ${IMG}"
@@ -169,6 +172,9 @@ for IMG in ${IMAGES}; do
 	   let FAILURES=FAILURES+1
 	   FAILED_IMAGES="${IMG} ${FAILED_IMAGES}"
 	   # Sending mail with log
+	   if [[ ! -s  out/${IMG}${STABLE_SUFFIX}_test.log ]]; then
+	       echo "<< no log output during the test phase >>" >   out/${IMG}${STABLE_SUFFIX}_test.log
+	   fi
 	   /bin/cat out/${IMG}${STABLE_SUFFIX}_test.log | mail -s "Packages TEST failed for ${IMG}" -r $MAIL_FROM $MAIL_TO
 	else
 	    echo "OK"
