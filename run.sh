@@ -51,21 +51,22 @@ if [ -z "$MAIL_TO" ]; then
     usage
 fi
 
-/bin/rm -rf out
-mkdir -p out/generic
+OUT="out-${TAG}"
+/bin/rm -rf ${OUT}
+mkdir -p ${OUT}/generic
 
 WHEEZY_BACKPORTS="RUN grep -q 'wheezy-backports' /etc/apt/sources.list || echo 'deb http\\://ftp.debian.org/debian wheezy-backports main' >> /etc/apt/sources.list"
 
 SALTSTACK="RUN wget https\\://copr.fedoraproject.org/coprs/saltstack/zeromq4/repo/epel-6/saltstack-zeromq4-epel-6.repo \&\& mv saltstack-zeromq4-epel-6.repo /etc/yum.repos.d/ "
 
 # Producing Dockerfile(s)
-sed -e "s:VERSION:12.04:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > out/generic/Dockerfile.ubuntu12
-sed -e "s:VERSION:14.04:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > out/generic/Dockerfile.ubuntu14
-sed -e "s:VERSION:16.04:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > out/generic/Dockerfile.ubuntu16
-sed -e "s:VERSION:wheezy:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${WHEEZY_BACKPORTS}:g" docker/Dockerfile.debian.seed > out/generic//Dockerfile.debianwheezy
-sed -e "s:VERSION:jessie:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" docker/Dockerfile.debian.seed > out/generic/Dockerfile.debianjessie
-sed -e "s:VERSION:6:g"      -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK:${SALTSTACK}:g" docker/Dockerfile.centos.seed > out/generic/Dockerfile.centos6
-sed -e "s:VERSION:7:g"      -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > out/generic/Dockerfile.centos7
+sed -e "s:VERSION:12.04:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu12
+sed -e "s:VERSION:14.04:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu14
+sed -e "s:VERSION:16.04:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu16
+sed -e "s:VERSION:wheezy:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${WHEEZY_BACKPORTS}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianwheezy
+sed -e "s:VERSION:jessie:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianjessie
+sed -e "s:VERSION:6:g"      -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK:${SALTSTACK}:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos6
+sed -e "s:VERSION:7:g"      -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
 
 # Cleanup log
 \rm -f *~ &> /dev/null
@@ -103,9 +104,9 @@ for ENTRYPOINT in entrypoints/*.sh; do
     ENTRYPOINT_SH=`basename ${ENTRYPOINT}`
     PACKAGES_LIST=`cat $ENTRYPOINT | grep TEST_PACKAGES | cut -d ':' -f 2 | xargs`
 
-    for DOCKERFILE_GENERIC in out/generic/Dockerfile.*; do
+    for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 	IMG="${DOCKERFILE_GENERIC##*.}.${PACKAGES_LIST// /.}"
-	DOCKERFILE=out/Dockerfile.${IMG}
+	DOCKERFILE=${OUT}/Dockerfile.${IMG}
 
 	echo "Preparing docker image ${IMG} [packages: $PACKAGES_LIST] [entrypoint: $ENTRYPOINT]"
 
@@ -122,24 +123,24 @@ for ENTRYPOINT in entrypoints/*.sh; do
 	while [ $attempt -le $MAX_ATTEMPTS ]
 	do
 	    echo -e "\t attempt: $attempt"
-	    ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . &> out/${IMG}${STABLE_SUFFIX}.log
+	    ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . &> ${OUT}/${IMG}${STABLE_SUFFIX}.log
 
 	    if [ $? == 0 ]; then break; fi
 
 	    let attempt=attempt+1
-	done 
+	done
 
 	if [ "$attempt" -gt "$MAX_ATTEMPTS" ];
 	then
-	   echo "Failed ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . &> out/${IMG}${STABLE_SUFFIX}.log"
-	   echo "Failure, see out/${IMG}${STABLE_SUFFIX}.log for more details"
+	   echo "Failed ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . &> ${OUT}/${IMG}${STABLE_SUFFIX}.log"
+	   echo "Failure, see ${OUT}/${IMG}${STABLE_SUFFIX}.log for more details"
 	   let FAILURES=FAILURES+1
 	   FAILED_IMAGES="${IMG} ${FAILED_IMAGES}"
 	   # Sending mail with log
-	   if [[ ! -s out/${IMG}${STABLE_SUFFIX}.log ]]; then
-	       echo "<< no log output during the build phase >>" >  out/${IMG}${STABLE_SUFFIX}.log
+	   if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}.log ]]; then
+	       echo "<< no log output during the build phase >>" >  ${OUT}/${IMG}${STABLE_SUFFIX}.log
 	   fi
-	   /bin/cat out/${IMG}${STABLE_SUFFIX}.log | mail -s "Packages installation failed on ${IMG}" -r $MAIL_FROM $MAIL_TO
+	   /bin/cat ${OUT}/${IMG}${STABLE_SUFFIX}.log | mail -s "Packages INSTALLATION failed on ${IMG} ${TAG}" -r $MAIL_FROM $MAIL_TO
 	else
 	    IMAGES="${IMAGES} ${IMG}"
 	fi
@@ -149,7 +150,7 @@ done
 if [ "$FAILURES" -ne "0" ]; then
     echo "Unable to build docker images: ${FAILED_IMAGES}" | mail -s "${TAG} packages INSTALLATION failed on $FAILURES images" -r $MAIL_FROM $MAIL_TO
 else
-    echo "All docker images built correctly." | mail -s "${TAG} packages installation completed successfully" -r  $MAIL_FROM $MAIL_TO
+    echo "All docker images built correctly." | mail -s "${TAG} packages INSTALLATION completed successfully" -r  $MAIL_FROM $MAIL_TO
 fi
 
 #exit 1
@@ -166,16 +167,16 @@ FAILED_IMAGES=""
 for IMG in ${IMAGES}; do
     if [[ $IMG ]]; then
 	echo -n "Testing ${IMG}... "
-	${DOCKER} run ${IMG} test &> out/${IMG}${STABLE_SUFFIX}_test.log
+	${DOCKER} run ${IMG} test &> ${OUT}/${IMG}${STABLE_SUFFIX}_test.log
 	if [ $? != 0 ]; then
-	    echo "FAIL Failed to execute: ${DOCKER} run ${IMG} test [see out/${IMG}${STABLE_SUFFIX}_test.log for more details]"
+	    echo "FAIL Failed to execute: ${DOCKER} run ${IMG} test [see ${OUT}/${IMG}${STABLE_SUFFIX}_test.log for more details]"
 	   let FAILURES=FAILURES+1
 	   FAILED_IMAGES="${IMG} ${FAILED_IMAGES}"
 	   # Sending mail with log
-	   if [[ ! -s  out/${IMG}${STABLE_SUFFIX}_test.log ]]; then
-	       echo "<< no log output during the test phase >>" >   out/${IMG}${STABLE_SUFFIX}_test.log
+	   if [[ ! -s  ${OUT}/${IMG}${STABLE_SUFFIX}_test.log ]]; then
+	       echo "<< no log output during the test phase >>" >   ${OUT}/${IMG}${STABLE_SUFFIX}_test.log
 	   fi
-	   /bin/cat out/${IMG}${STABLE_SUFFIX}_test.log | mail -s "Packages TEST failed for ${IMG}" -r $MAIL_FROM $MAIL_TO
+	   /bin/cat ${OUT}/${IMG}${STABLE_SUFFIX}_test.log | mail -s "Packages TEST failed for ${IMG} ${TAG}" -r $MAIL_FROM $MAIL_TO
 	else
 	    echo "OK"
 	fi
@@ -183,9 +184,9 @@ for IMG in ${IMAGES}; do
 done
 
 if [ "$FAILURES" -ne "0" ]; then
-    echo "Unable to TEST docker images: ${FAILED_IMAGES}" | mail -s "${TAG} packages INSTALLATION failed on $FAILURES images" -r $MAIL_FROM $MAIL_TO
+    echo "Unable to TEST docker images: ${FAILED_IMAGES}" | mail -s "${TAG} packages TEST failed on $FAILURES images" -r $MAIL_FROM $MAIL_TO
 else
-    echo "All docker images test correctly." | mail -s "${TAG} packages test completed successfully" -r  $MAIL_FROM $MAIL_TO
+    echo "All docker images test correctly." | mail -s "${TAG} packages TEST completed successfully" -r  $MAIL_FROM $MAIL_TO
 fi
 
 # Cleaning up containers/images
