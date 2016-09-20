@@ -4,12 +4,30 @@ MAIL_FROM=""
 MAIL_TO=""
 
 function usage {
-    echo "Usage: run.sh [-m=stable] -f=<mail from> -t=<mail to>"
+    echo "Usage: run.sh [--cleanup] | [ [-m=stable] -f=<mail from> -t=<mail to> ]"
+    echo ""
+    echo "-c|--cleanup     : clears all docker images and containers"
     echo ""
     echo "This tool will build some empty docker containers where ntop packages"
     echo "will be installed. This tool will make some tests and report"
     echo "results via email, thus it is necessary to set -f and -t."
     exit 0
+}
+
+function cleanup {
+    \rm -f *~ &> /dev/null
+    CONT=$(${DOCKER} ps -a -q | xargs)
+    if [[ $CONT ]]; then
+	echo "Cleaning up containers: ${CONT}"
+	${DOCKER} rm -f ${CONT}
+    fi
+
+    # clean only the images that are prefixed with TAG
+    IMGS=$(${DOCKER} images -q | xargs)
+    if [[ $IMGS ]]; then
+	echo "Cleaning up images: ${IMGS}"
+	${DOCKER} rmi ${IMGS}
+    fi
 }
 
 
@@ -36,6 +54,10 @@ do
 
 	-t=*|--mail-to=*)
 	    MAIL_TO="${i#*=}"
+	    ;;
+	-c|--cleanup)
+	    cleanup
+	    exit 0
 	    ;;
 	*)
 	    # unknown option
@@ -68,27 +90,9 @@ sed -e "s:VERSION:jessie:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g"
 sed -e "s:VERSION:6:g"      -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK:${SALTSTACK}:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos6
 sed -e "s:VERSION:7:g"      -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
 
-# Cleanup log
-\rm -f *~ &> /dev/null
-
-
-function cleanup {
-	CONT=$(${DOCKER} ps -a -q)
-	if [[ $CONT ]]; then
-		echo "Cleaning up containers.."
-		${DOCKER} rm -f ${CONT}
-	fi
-
-	IMGS=$(${DOCKER} images -q)
-	if [[ $IMGS ]]; then
-		echo "Cleaning up images.."
-		${DOCKER} rmi ${IMGS}
-	fi
-}
-
 # Deleting old containers/images
 #wait before cleaning up
-cleanup 
+#cleanup 
 
 # #################################################################################################################
 # INSTALLATION TESTS
@@ -105,8 +109,10 @@ for ENTRYPOINT in entrypoints/*.sh; do
     PACKAGES_LIST=`cat $ENTRYPOINT | grep TEST_PACKAGES | cut -d ':' -f 2 | xargs`
 
     for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
-	IMG="${DOCKERFILE_GENERIC##*.}.${PACKAGES_LIST// /.}"
+	IMG="${DOCKERFILE_GENERIC##*.}.${TAG}.${PACKAGES_LIST// /.}"
 	DOCKERFILE=${OUT}/Dockerfile.${IMG}
+
+	#if [ "${IMG}" != "debianjessie.nprobe" ]; then continue; fi
 
 	echo "Preparing docker image ${IMG} [packages: $PACKAGES_LIST] [entrypoint: $ENTRYPOINT]"
 
@@ -186,7 +192,9 @@ done
 if [ "$FAILURES" -ne "0" ]; then
     echo "Unable to TEST docker images: ${FAILED_IMAGES}" | mail -s "${TAG} packages TEST failed on $FAILURES images" -r $MAIL_FROM $MAIL_TO
 else
-    echo "All docker images test correctly." | mail -s "${TAG} packages TEST completed successfully" -r  $MAIL_FROM $MAIL_TO
+    if [ "${IMAGES}" != "" ] ; then
+	echo "All docker images test correctly." | mail -s "${TAG} packages TEST completed successfully" -r  $MAIL_FROM $MAIL_TO
+    fi
 fi
 
 # Cleaning up containers/images
