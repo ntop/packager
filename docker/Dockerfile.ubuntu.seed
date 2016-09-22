@@ -2,7 +2,7 @@ FROM ubuntu:VERSION
 MAINTAINER Luca Deri <deri@ntop.org>
 
 RUN apt-get update && \
-    apt-get -y -q install wget && \
+    apt-get -y -q install wget lsb-release && \
     wget -q http://aptSTABLE.ntop.org/VERSION/all/apt-ntopSTABLE.deb && \
     dpkg -i apt-ntopSTABLE.deb && \
     rm -f apt-ntopSTABLE.deb && \
