@@ -23,7 +23,8 @@ function cleanup {
     fi
 
     # clean only the images that are prefixed with TAG
-    IMGS=$(${DOCKER} images -q --filter "dangling=true" | xargs)
+    #IMGS=$(${DOCKER} images -q --filter "dangling=true" | xargs)
+    IMGS=$(${DOCKER} images -q | xargs)
     if [[ $IMGS ]]; then
 	echo "Cleaning up images: ${IMGS}"
 	${DOCKER} rmi ${IMGS}
