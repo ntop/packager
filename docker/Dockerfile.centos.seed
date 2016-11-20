@@ -1,11 +1,11 @@
-FROM centos:VERSION
-MAINTAINER Alfredo Cardigliano <cardigliano@ntop.org>
+FROM centos:MINOR
+MAINTAINER packager@ntop.org
 
 RUN yum -y update && \
     yum -y -q install wget epel-release && \
     wget -q http://packages.ntop.org/centosSTABLE/ntop.repo -O ntop.repo && \
     mv ntop.repo /etc/yum.repos.d/ && \
-    wget -q http://packages.ntop.org/centosSTABLE/epel-VERSION.repo -O epel.repo && \
+    wget -q http://packages.ntop.org/centosSTABLE/epel-MAJOR.repo -O epel.repo && \
     mv epel.repo /etc/yum.repos.d/
 
 SALTSTACK

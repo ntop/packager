@@ -1,5 +1,5 @@
 FROM ubuntu:VERSION
-MAINTAINER Luca Deri <deri@ntop.org>
+MAINTAINER packager@ntop.org
 
 RUN apt-get update && \
     apt-get -y -q install wget lsb-release && \
