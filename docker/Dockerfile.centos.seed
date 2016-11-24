@@ -6,7 +6,8 @@ RUN yum -y update && \
     wget -q http://packages.ntop.org/centosSTABLE/ntop.repo -O ntop.repo && \
     mv ntop.repo /etc/yum.repos.d/ && \
     wget -q http://packages.ntop.org/centosSTABLE/epel-MAJOR.repo -O epel.repo && \
-    mv epel.repo /etc/yum.repos.d/
+    mv epel.repo /etc/yum.repos.d/ && \
+    CENTOS rpm -ivh  http://packages.ntop.org/rpm6/extra/hiredis-0.10.1-3.el6.x86_64.rpm http://packages.ntop.org/rpm6/extra/hiredis-devel-0.10.1-3.el6.x86_64.rpm
 
 SALTSTACK
 
