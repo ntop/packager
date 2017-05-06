@@ -1,4 +1,4 @@
-macs FROM centos:MINOR
+FROM centos:MINOR
 MAINTAINER packager@ntop.org
 
 RUN yum -y update && \
