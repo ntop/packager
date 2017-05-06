@@ -2,7 +2,7 @@ FROM centos:MINOR
 MAINTAINER packager@ntop.org
 
 RUN yum -y update && \
-    yum install wget && \
+    yum -y -q install wget && \
     rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-MAJOR.noarch.rpm && \
     wget -q http://packages.ntop.org/centosSTABLE/ntop.repo -O ntop.repo && \
     mv ntop.repo /etc/yum.repos.d/ && \
