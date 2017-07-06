@@ -83,6 +83,7 @@ WHEEZY_BACKPORTS="RUN grep -q 'wheezy-backports' /etc/apt/sources.list || echo '
 SALTSTACK="RUN wget https\\://copr.fedoraproject.org/coprs/saltstack/zeromq4/repo/epel-6/saltstack-zeromq4-epel-6.repo \&\& mv saltstack-zeromq4-epel-6.repo /etc/yum.repos.d/ "
 
 # Producing Dockerfile(s)
+sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianstretch
 sed -e "s:VERSION:12.04:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu12
 sed -e "s:VERSION:14.04:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu14
 sed -e "s:VERSION:16.04:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu16
@@ -112,8 +113,6 @@ for ENTRYPOINT in entrypoints/*.sh; do
     for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 	IMG="${DOCKERFILE_GENERIC##*.}.${TAG}.${PACKAGES_LIST// /.}"
 	DOCKERFILE=${OUT}/Dockerfile.${IMG}
-
-	#if [ "${IMG}" != "debianjessie.nprobe" ]; then continue; fi
 
 	echo "Preparing docker image ${IMG} [packages: $PACKAGES_LIST] [entrypoint: $ENTRYPOINT]"
 
