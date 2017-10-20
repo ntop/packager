@@ -89,6 +89,7 @@ sed -e "s:VERSION:14.04:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.u
 sed -e "s:VERSION:16.04:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu16
 sed -e "s:VERSION:wheezy:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${WHEEZY_BACKPORTS}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianwheezy
 sed -e "s:VERSION:jessie:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianjessie
+sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianstretch
 sed -e "s:MINOR:6.8:g" -e "s:CENTOS::g" -e "s:MAJOR:6:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK:${SALTSTACK}:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos6
 sed -e "s:MINOR:7.2.1511:g" -e "s:CENTOS:#:g" -e "s:MAJOR:7:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
 
