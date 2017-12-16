@@ -15,7 +15,7 @@ RUN yum -y -q erase zeromq3 ; \
     yum -y update
 
 RUN yum -y install PACKAGES_LIST
-RUN yum -y purge PACKAGES_LIST
+RUN yum -y erase PACKAGES_LIST
 
 RUN yum -y install PACKAGES_LIST
 
