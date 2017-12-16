@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # specify here the packages you want to install before running this script
-# TEST_PACKAGES: pfring pfring-dkms pfring-drivers-zc-dkms
+# TEST_PACKAGES: pfring pfring-dkms pfring-drivers-zc-dkms n2disk cento nprobe ntopng
+# NOTE: we do not install nbox as it's not available on all platforms
 
 set -e
 

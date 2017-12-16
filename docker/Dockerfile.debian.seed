@@ -13,6 +13,9 @@ RUN apt-get clean all && \
     apt-get update
 
 RUN apt-get -y install PACKAGES_LIST
+RUN apt-get -y remove PACKAGES_LIST
+
+RUN apt-get -y install PACKAGES_LIST
 
 COPY ENTRYPOINT_PATH /tmp
 ENTRYPOINT ["/tmp/ENTRYPOINT_SH"]

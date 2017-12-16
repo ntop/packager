@@ -27,7 +27,7 @@ function cleanup {
     IMGS=$(${DOCKER} images -q | xargs)
     if [[ $IMGS ]]; then
 	echo "Cleaning up images: ${IMGS}"
-	${DOCKER} rmi ${IMGS}
+	${DOCKER} rmi -f ${IMGS}
     fi
 }
 
