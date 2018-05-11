@@ -16,6 +16,7 @@ function usage {
 
 function cleanup {
     \rm -f *~ &> /dev/null
+
     CONT=$(${DOCKER} ps -a -q | xargs)
     if [[ $CONT ]]; then
 	echo "Cleaning up containers: ${CONT}"
@@ -77,6 +78,10 @@ do
 	    cleanup
 	    exit 0
 	    ;;
+	-h|--help)
+	    usage
+	    exit 0
+	    ;;
 	*)
 	    # unknown option
 	    ;;
@@ -106,33 +111,40 @@ sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g
 sed -e "s:MINOR:6.8:g"       -e "s:CENTOS::g" -e "s:MAJOR:6:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK:${SALTSTACK}:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos6
 sed -e "s:MINOR:7.2.1511:g"  -e "s:CENTOS:#:g" -e "s:MAJOR:7:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
 
-# Deleting old containers/images
-#wait before cleaning up
-#cleanup 
+INSTALLATION_FAILURES=0
+INSTALLATION_FAILED_IMAGES=""
 
-# #################################################################################################################
-# INSTALLATION TESTS
-#
-# Build docker images for each supported distro and for each softare product so to test everything independently
-# #################################################################################################################
+FUNCTIONAL_FAILURES=0
+FUNCTIONAL_FAILED_IMAGES=""
 
-FAILURES=0
-FAILED_IMAGES=""
 IMAGES=""
 
-for ENTRYPOINT in entrypoints/*.sh; do
-    ENTRYPOINT_SH=`basename ${ENTRYPOINT}`
-    PACKAGES_LIST=`cat $ENTRYPOINT | grep TEST_PACKAGES | cut -d ':' -f 2 | xargs`
+# Cleanup all containers/images
+cleanup
 
-    for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
+# ########################################################################################################################
+# Build and test docker images for each supported distro and for each softare product so to test everything independently
+# ########################################################################################################################
+
+for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
+    for ENTRYPOINT in entrypoints/*.sh; do
+
+        ENTRYPOINT_SH=`basename ${ENTRYPOINT}`
+        PACKAGES_LIST=`cat $ENTRYPOINT | grep TEST_PACKAGES | cut -d ':' -f 2 | xargs`
+
 	IMG="${DOCKERFILE_GENERIC##*.}.${TAG}.${PACKAGES_LIST// /.}"
 	DOCKERFILE=${OUT}/Dockerfile.${IMG}
+
+        # #################################################################################################################
+        # INSTALLATION TEST
+        # #################################################################################################################
 
 	echo "Preparing docker image ${IMG} [packages: $PACKAGES_LIST] [entrypoint: $ENTRYPOINT]"
 
 	if [ "$IMG" = "seed" ]; then
 	    continue
 	fi
+
 	sed -e "s:PACKAGES_LIST:${PACKAGES_LIST}:g" \
 	    -e "s:ENTRYPOINT_PATH:${ENTRYPOINT}:g" \
 	    -e "s:ENTRYPOINT_SH:${ENTRYPOINT_SH}:g" \
@@ -154,8 +166,8 @@ for ENTRYPOINT in entrypoints/*.sh; do
 	then
 	    echo "Failed ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . &> ${OUT}/${IMG}${STABLE_SUFFIX}.log"
 	    echo "Failure, see ${OUT}/${IMG}${STABLE_SUFFIX}.log for more details"
-	    let FAILURES=FAILURES+1
-	    FAILED_IMAGES="${IMG} ${FAILED_IMAGES}"
+	    let INSTALLATION_FAILURES=INSTALLATION_FAILURES+1
+	    INSTALLATION_FAILED_IMAGES="${IMG} ${INSTALLATION_FAILED_IMAGES}"
 	    # Sending mail with log
 	    if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}.log ]]; then
 	        echo "<< no log output during the build phase >>" >  ${OUT}/${IMG}${STABLE_SUFFIX}.log
@@ -163,54 +175,45 @@ for ENTRYPOINT in entrypoints/*.sh; do
 	    sendAlert "Packages INSTALLATION failed on ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}.log"
 	else
 	    IMAGES="${IMAGES} ${IMG}"
+
+            # #################################################################################################################
+            # FUNCTIONAL TESTS
+            # #################################################################################################################
+
+	    echo -n "Testing ${IMG}... "
+	    ${DOCKER} run ${IMG} test &> ${OUT}/${IMG}${STABLE_SUFFIX}_test.log
+	    if [ $? != 0 ]; then
+	        echo "FAIL Failed to execute: ${DOCKER} run ${IMG} test [see ${OUT}/${IMG}${STABLE_SUFFIX}_test.log for more details]"
+	        let FUNCTIONAL_FAILURES=FUNCTIONAL_FAILURES+1
+	        FUNCTIONAL_FAILED_IMAGES="${IMG} ${FUNCTIONAL_FAILED_IMAGES}"
+	        # Sending mail with log
+	        if [[ ! -s  ${OUT}/${IMG}${STABLE_SUFFIX}_test.log ]]; then
+	            echo "<< no log output during the test phase >>" >   ${OUT}/${IMG}${STABLE_SUFFIX}_test.log
+	        fi
+                sendAlert "Packages TEST failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}_test.log"
+	    else
+	        echo "OK"
+	    fi
+
 	fi
     done
+
+    # Cleaning up created images/containers to make room on disk
+    cleanup
+
 done
 
-if [ "$FAILURES" -ne "0" ]; then
-    sendAlert "${TAG} packages INSTALLATION failed on $FAILURES images" "Unable to build docker images: ${FAILED_IMAGES}"
+if [ "$INSTALLATION_FAILURES" -ne "0" ]; then
+    sendAlert "${TAG} packages INSTALLATION failed on $INSTALLATION_FAILURES images" "Unable to build docker images: ${INSTALLATION_FAILED_IMAGES}"
 else
     sendAlert "${TAG} packages INSTALLATION completed successfully" "All docker images built correctly."
 fi
 
-#exit 1
-
-# #################################################################################################################
-# FUNCTIONAL TESTS
-#
-# Now that the docker containers have been successfully built it's time to actually test the installed software
-# #################################################################################################################
-
-FAILURES=0
-FAILED_IMAGES=""
-
-for IMG in ${IMAGES}; do
-    if [[ $IMG ]]; then
-	echo -n "Testing ${IMG}... "
-	${DOCKER} run ${IMG} test &> ${OUT}/${IMG}${STABLE_SUFFIX}_test.log
-	if [ $? != 0 ]; then
-	    echo "FAIL Failed to execute: ${DOCKER} run ${IMG} test [see ${OUT}/${IMG}${STABLE_SUFFIX}_test.log for more details]"
-	    let FAILURES=FAILURES+1
-	    FAILED_IMAGES="${IMG} ${FAILED_IMAGES}"
-	    # Sending mail with log
-	    if [[ ! -s  ${OUT}/${IMG}${STABLE_SUFFIX}_test.log ]]; then
-	        echo "<< no log output during the test phase >>" >   ${OUT}/${IMG}${STABLE_SUFFIX}_test.log
-	    fi
-            sendAlert "Packages TEST failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}_test.log"
-	else
-	    echo "OK"
-	fi
-    fi
-done
-
-if [ "$FAILURES" -ne "0" ]; then
-    sendAlert "${TAG} packages TEST failed on $FAILURES images" "Unable to TEST docker images: ${FAILED_IMAGES}"
+if [ "$FUNCTIONAL_FAILURES" -ne "0" ]; then
+    sendAlert "${TAG} packages TEST failed on $FUNCTIONAL_FAILURES images" "Unable to TEST docker images: ${FUNCTIONAL_FAILED_IMAGES}"
 else
     if [ "${IMAGES}" != "" ] ; then
         sendAlert "${TAG} packages TEST completed successfully" "All docker images test correctly."
     fi
 fi
 
-# Cleaning up containers/images
-# don't clean up the images/containers here, they may be used later
-# cleanup
