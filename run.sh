@@ -31,6 +31,24 @@ function cleanup {
     fi
 }
 
+function sendAlert {
+    if [ -n "$MAIL_FROM" ] && [ -n "$MAIL_TO" ] ; then
+	if [ -n "$3" ] ; then
+            /bin/cat $3 | mail -s $1 -r $MAIL_FROM $MAIL_TO
+        else
+            echo "$2" | mail -s $1 -r $MAIL_FROM $MAIL_TO
+        fi
+    else
+        echo "[>] $1"
+        echo "---"
+	if [ -n "$3" ] ; then
+            /bin/cat $3
+        else
+            echo "$2"
+        fi
+        echo "---"
+    fi
+}
 
 DOCKER="sudo docker"
 TAG="development"
@@ -50,7 +68,6 @@ do
 
 	-f=*|--mail-from=*)
 	    MAIL_FROM="${i#*=}"
-
 	    ;;
 
 	-t=*|--mail-to=*)
@@ -66,12 +83,8 @@ do
     esac
 done
 
-if [ -z "$MAIL_FROM" ]; then
-    usage
-fi
-
-if [ -z "$MAIL_TO" ]; then
-    usage
+if [ -z "$MAIL_FROM" ] || [ -z "$MAIL_TO" ] ; then
+    echo "Warning: please specify -f=<from> -t=<to> to send alerts by mail"
 fi
 
 OUT="out-${TAG}"
@@ -139,15 +152,15 @@ for ENTRYPOINT in entrypoints/*.sh; do
 
 	if [ "$attempt" -gt "$MAX_ATTEMPTS" ];
 	then
-	   echo "Failed ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . &> ${OUT}/${IMG}${STABLE_SUFFIX}.log"
-	   echo "Failure, see ${OUT}/${IMG}${STABLE_SUFFIX}.log for more details"
-	   let FAILURES=FAILURES+1
-	   FAILED_IMAGES="${IMG} ${FAILED_IMAGES}"
-	   # Sending mail with log
-	   if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}.log ]]; then
-	       echo "<< no log output during the build phase >>" >  ${OUT}/${IMG}${STABLE_SUFFIX}.log
-	   fi
-	   /bin/cat ${OUT}/${IMG}${STABLE_SUFFIX}.log | mail -s "Packages INSTALLATION failed on ${IMG} ${TAG}" -r $MAIL_FROM $MAIL_TO
+	    echo "Failed ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . &> ${OUT}/${IMG}${STABLE_SUFFIX}.log"
+	    echo "Failure, see ${OUT}/${IMG}${STABLE_SUFFIX}.log for more details"
+	    let FAILURES=FAILURES+1
+	    FAILED_IMAGES="${IMG} ${FAILED_IMAGES}"
+	    # Sending mail with log
+	    if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}.log ]]; then
+	        echo "<< no log output during the build phase >>" >  ${OUT}/${IMG}${STABLE_SUFFIX}.log
+	    fi
+	    sendAlert "Packages INSTALLATION failed on ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}.log"
 	else
 	    IMAGES="${IMAGES} ${IMG}"
 	fi
@@ -155,9 +168,9 @@ for ENTRYPOINT in entrypoints/*.sh; do
 done
 
 if [ "$FAILURES" -ne "0" ]; then
-    echo "Unable to build docker images: ${FAILED_IMAGES}" | mail -s "${TAG} packages INSTALLATION failed on $FAILURES images" -r $MAIL_FROM $MAIL_TO
+    sendAlert "${TAG} packages INSTALLATION failed on $FAILURES images" "Unable to build docker images: ${FAILED_IMAGES}"
 else
-    echo "All docker images built correctly." | mail -s "${TAG} packages INSTALLATION completed successfully" -r  $MAIL_FROM $MAIL_TO
+    sendAlert "${TAG} packages INSTALLATION completed successfully" "All docker images built correctly."
 fi
 
 #exit 1
@@ -177,13 +190,13 @@ for IMG in ${IMAGES}; do
 	${DOCKER} run ${IMG} test &> ${OUT}/${IMG}${STABLE_SUFFIX}_test.log
 	if [ $? != 0 ]; then
 	    echo "FAIL Failed to execute: ${DOCKER} run ${IMG} test [see ${OUT}/${IMG}${STABLE_SUFFIX}_test.log for more details]"
-	   let FAILURES=FAILURES+1
-	   FAILED_IMAGES="${IMG} ${FAILED_IMAGES}"
-	   # Sending mail with log
-	   if [[ ! -s  ${OUT}/${IMG}${STABLE_SUFFIX}_test.log ]]; then
-	       echo "<< no log output during the test phase >>" >   ${OUT}/${IMG}${STABLE_SUFFIX}_test.log
-	   fi
-	   /bin/cat ${OUT}/${IMG}${STABLE_SUFFIX}_test.log | mail -s "Packages TEST failed for ${IMG} ${TAG}" -r $MAIL_FROM $MAIL_TO
+	    let FAILURES=FAILURES+1
+	    FAILED_IMAGES="${IMG} ${FAILED_IMAGES}"
+	    # Sending mail with log
+	    if [[ ! -s  ${OUT}/${IMG}${STABLE_SUFFIX}_test.log ]]; then
+	        echo "<< no log output during the test phase >>" >   ${OUT}/${IMG}${STABLE_SUFFIX}_test.log
+	    fi
+            sendAlert "Packages TEST failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}_test.log"
 	else
 	    echo "OK"
 	fi
@@ -191,10 +204,10 @@ for IMG in ${IMAGES}; do
 done
 
 if [ "$FAILURES" -ne "0" ]; then
-    echo "Unable to TEST docker images: ${FAILED_IMAGES}" | mail -s "${TAG} packages TEST failed on $FAILURES images" -r $MAIL_FROM $MAIL_TO
+    sendAlert "${TAG} packages TEST failed on $FAILURES images" "Unable to TEST docker images: ${FAILED_IMAGES}"
 else
     if [ "${IMAGES}" != "" ] ; then
-	echo "All docker images test correctly." | mail -s "${TAG} packages TEST completed successfully" -r  $MAIL_FROM $MAIL_TO
+        sendAlert "${TAG} packages TEST completed successfully" "All docker images test correctly."
     fi
 fi
 
