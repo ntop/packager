@@ -99,7 +99,7 @@ mkdir -p ${OUT}/generic
 WHEEZY_BACKPORTS="RUN grep -q 'wheezy-backports' /etc/apt/sources.list || echo 'deb http\\://ftp.debian.org/debian wheezy-backports main' >> /etc/apt/sources.list"
 JESSIE_BACKPORTS="RUN grep -q 'jessie-backports' /etc/apt/sources.list || echo 'deb http\\://ftp.debian.org/debian jessie-backports main' >> /etc/apt/sources.list"
 UBUNTU14_PPA="RUN apt-get update \\&\\& apt-get -y -q install software-properties-common \\&\\& add-apt-repository ppa\\:maxmind/ppa"
-UBUNTU18_REPOSITORIES="RUN apt-get update \\&\\& apt-get -y -q install software-properties-common \\&\\& add-apt-repository universe"
+UBUNTU18_REPOSITORIES="RUN apt-get update \\&\\& apt-get -y -q install gnupg software-properties-common \\&\\& add-apt-repository universe"
 
 SALTSTACK="RUN wget https\\://copr.fedoraproject.org/coprs/saltstack/zeromq4/repo/epel-6/saltstack-zeromq4-epel-6.repo \&\& mv saltstack-zeromq4-epel-6.repo /etc/yum.repos.d/ "
 
@@ -111,11 +111,11 @@ sed -e "s:VERSION:16.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g
 sed -e "s:VERSION:18.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:REPOSITORIES:${UBUNTU18_REPOSITORIES}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu18
 
 #sed -e "s:VERSION:wheezy:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${WHEEZY_BACKPORTS}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianwheezy
-sed -e "s:VERSION:jessie:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${JESSIE_BACKPORTS}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianjessie
+#sed -e "s:VERSION:jessie:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${JESSIE_BACKPORTS}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianjessie
 sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianstretch
 
-#sed -e "s:MINOR:6.8:g"       -e "s:CENTOS::g" -e "s:MAJOR:6:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK:${SALTSTACK}:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos6
-#sed -e "s:MINOR:7.2.1511:g"  -e "s:CENTOS:#:g" -e "s:MAJOR:7:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
+##sed -e "s:MINOR:6.10:g"       -e "s:CENTOS::g" -e "s:MAJOR:6:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK:${SALTSTACK}:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos6
+sed -e "s:MINOR:7.6.1810:g"  -e "s:CENTOS:#:g" -e "s:MAJOR:7:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
 
 INSTALLATION_FAILURES=0
 INSTALLATION_FAILED_IMAGES=""
@@ -160,12 +160,14 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 	attempt=1
 	while [ $attempt -le $MAX_ATTEMPTS ]
 	do
-	    echo -e "\t attempt: $attempt"
+	    echo "Running ${DOCKER} build --no-cache -t ${IMG} -f ${DOCKERFILE}"
+
 	    ${DOCKER} build --no-cache -t ${IMG} -f ${DOCKERFILE} . &> ${OUT}/${IMG}${STABLE_SUFFIX}.log
 
 	    if [ $? == 0 ]; then break; fi
 
 	    let attempt=attempt+1
+	    echo -e "Attempt #$attempt.."
 	done
 
 	if [ "$attempt" -gt "$MAX_ATTEMPTS" ];
