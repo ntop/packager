@@ -1,6 +1,8 @@
 FROM ubuntu:VERSION
 MAINTAINER packager@ntop.org
 
+REPOSITORIES
+
 RUN apt-get update && \
     apt-get -y -q install wget lsb-release && \
     wget -q http://aptSTABLE.ntop.org/VERSION/all/apt-ntopSTABLE.deb && \
