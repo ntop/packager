@@ -35,9 +35,9 @@ function cleanup {
 function sendAlert {
     if [ -n "$MAIL_FROM" ] && [ -n "$MAIL_TO" ] ; then
 	if [ -n "$3" ] ; then
-            /bin/cat $3 | mail -s $1 -r $MAIL_FROM $MAIL_TO
+            /bin/cat $3 | mail -s "$1" -r "${MAIL_FROM}" "${MAIL_TO}"
         else
-            echo "$2" | mail -s $1 -r $MAIL_FROM $MAIL_TO
+            echo "$2" | mail -s "$1" -r "${MAIL_FROM}" "${MAIL_TO}"
         fi
     else
         echo "[>] $1"
@@ -134,7 +134,6 @@ cleanup
 
 for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
     for ENTRYPOINT in entrypoints/*.sh; do
-
         ENTRYPOINT_SH=`basename ${ENTRYPOINT}`
         PACKAGES_LIST=`cat $ENTRYPOINT | grep TEST_PACKAGES | cut -d ':' -f 2 | xargs`
 
@@ -220,8 +219,6 @@ fi
 if [ "$FUNCTIONAL_FAILURES" -ne "0" ]; then
     sendAlert "${TAG} packages TEST failed on $FUNCTIONAL_FAILURES images" "Unable to TEST docker images: ${FUNCTIONAL_FAILED_IMAGES}"
 else
-    if [ "${IMAGES}" != "" ] ; then
-        sendAlert "${TAG} packages TEST completed successfully" "All docker images test correctly."
-    fi
+    sendAlert "${TAG} packages TEST completed successfully" "All docker images test correctly."
 fi
 
