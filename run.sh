@@ -117,7 +117,7 @@ sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g
 # Raspbian
 #sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.raspbian.seed > ${OUT}/generic/Dockerfile.raspbianstretch
 
-##sed -e "s:MINOR:6.10:g"       -e "s:CENTOS::g" -e "s:MAJOR:6:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK:${SALTSTACK}:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos6
+sed -e "s:MINOR:6.10:g"       -e "s:CENTOS::g" -e "s:MAJOR:6:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK:${SALTSTACK}:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos6
 sed -e "s:MINOR:7.6.1810:g"  -e "s:CENTOS:#:g" -e "s:MAJOR:7:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
 
 INSTALLATION_FAILURES=0
