@@ -113,6 +113,7 @@ sed -e "s:VERSION:18.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g
 #sed -e "s:VERSION:wheezy:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${WHEEZY_BACKPORTS}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianwheezy
 sed -e "s:VERSION:jessie:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${JESSIE_BACKPORTS}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianjessie
 sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianstretch
+sed -e "s:VERSION:buster:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbuster
 
 # Raspbian
 #sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.raspbian.seed > ${OUT}/generic/Dockerfile.raspbianstretch
@@ -136,6 +137,7 @@ cleanup
 # ########################################################################################################################
 
 for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
+
     for ENTRYPOINT in entrypoints/*.sh; do
         ENTRYPOINT_SH=`basename ${ENTRYPOINT}`
         PACKAGES_LIST=`cat $ENTRYPOINT | grep TEST_PACKAGES | cut -d ':' -f 2 | xargs`
