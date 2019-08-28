@@ -149,6 +149,11 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         # INSTALLATION TEST
         # #################################################################################################################
 
+	if [[ ${IMG} == debianbuster.stable* ]]; then
+	    # Debian buster stable packages not yet supported. Will be available from the next release
+	    continue
+	fi
+
 	echo "Preparing docker image ${IMG} [packages: $PACKAGES_LIST] [entrypoint: $ENTRYPOINT]"
 
 	if [ "$IMG" = "seed" ]; then
