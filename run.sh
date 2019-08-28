@@ -97,7 +97,7 @@ OUT="out-${TAG}"
 mkdir -p ${OUT}/generic
 
 WHEEZY_BACKPORTS="RUN grep -q 'wheezy-backports' /etc/apt/sources.list || echo 'deb http\\://ftp.debian.org/debian wheezy-backports main' >> /etc/apt/sources.list"
-JESSIE_BACKPORTS="RUN grep -q 'jessie-backports' /etc/apt/sources.list || echo 'deb http\\://ftp.debian.org/debian jessie-backports main' >> /etc/apt/sources.list"
+JESSIE_BACKPORTS="RUN echo 'deb http\\://archive.debian.org/debian jessie-backports main' >> /etc/apt/sources.list \\&\\& echo 'Acquire\\:\\:Check-Valid-Until no;' > /etc/apt/apt.conf.d/99no-check-valid-until \\&\\& apt-get update \\&\\& apt-get install libjson-c2"
 UBUNTU14_PPA="RUN apt-get -y install software-properties-common \\&\\& add-apt-repository ppa\\:maxmind/ppa \\&\\& apt-get update"
 UBUNTU18_REPOSITORIES="RUN apt-get update \\&\\& apt-get -y -q install gnupg software-properties-common \\&\\& add-apt-repository universe"
 
