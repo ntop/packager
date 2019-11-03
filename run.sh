@@ -118,8 +118,12 @@ sed -e "s:VERSION:buster:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g"
 # Raspbian
 #sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.raspbian.seed > ${OUT}/generic/Dockerfile.raspbianstretch
 
-sed -e "s:MINOR:6.10:g"       -e "s:CENTOS::g" -e "s:MAJOR:6:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK:${SALTSTACK}:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos6
-sed -e "s:MINOR:7.6.1810:g"  -e "s:CENTOS:#:g" -e "s:MAJOR:7:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
+# Centos6
+sed -e "s:MINOR:6.10:g" -e "s:CENTOS6::g" -e "s:CENTOS8:#:g" -e "s:MAJOR:6:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK:${SALTSTACK}:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos6
+# Centos7
+sed -e "s:MINOR:7.6.1810:g" -e "s:CENTOS6:#:g" -e "s:CENTOS8:#:g" -e "s:MAJOR:7:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
+# Centos8
+sed -e "s:MINOR:8:g"  -e "s:CENTOS6:#:g" -e "s:CENTOS8::g" -e "s:MAJOR:8:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos8
 
 INSTALLATION_FAILURES=0
 INSTALLATION_FAILED_IMAGES=""
@@ -137,7 +141,6 @@ cleanup
 # ########################################################################################################################
 
 for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
-
     for ENTRYPOINT in entrypoints/*.sh; do
         ENTRYPOINT_SH=`basename ${ENTRYPOINT}`
         PACKAGES_LIST=`cat $ENTRYPOINT | grep TEST_PACKAGES | cut -d ':' -f 2 | xargs`
@@ -151,6 +154,11 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 
 	if [[ ${IMG} == debianbuster.stable* ]]; then
 	    # Debian buster stable packages not yet supported. Will be available from the next release
+	    continue
+	fi
+
+	if [ "centos8.development.n2disk" == ${IMG} ]; then
+	    # Seems n2disk on centos8 attempts to install kernel-related stuff which is not supported on docker
 	    continue
 	fi
 
