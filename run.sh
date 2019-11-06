@@ -157,6 +157,11 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 	    continue
 	fi
 
+	if [[ ${IMG} == centos8.stable* ]]; then
+	    # Centos8 stable packages not yet supported. Will be available from the next release
+	    continue
+	fi
+
 	if [ "centos8.development.n2disk" == ${IMG} ]; then
 	    # Seems n2disk on centos8 attempts to install kernel-related stuff which is not supported on docker
 	    continue
