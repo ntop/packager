@@ -154,13 +154,15 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         # INSTALLATION TEST
         # #################################################################################################################
 
-	if [[ ${IMG} == centos8.stable* ]]; then
-	    # Centos8 stable packages not yet supported. Will be available from the next release
+	if [ "centos8.development.n2disk" == ${IMG} ] || [ "centos8.stable.n2disk" == ${IMG} ]; then
+	    # Seems n2disk on centos8 attempts to install kernel-related stuff which is not supported on docker
 	    continue
 	fi
 
-	if [ "centos8.development.n2disk" == ${IMG} ]; then
-	    # Seems n2disk on centos8 attempts to install kernel-related stuff which is not supported on docker
+	if [[ ${IMG} == centos8.* ]]; then
+	    # Seems centos8 has the rpmdb broken on docker
+	    # https://github.com/ansible/awx/issues/6306
+	    # must skip until this is solved
 	    continue
 	fi
 
@@ -197,7 +199,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 	    INSTALLATION_FAILED_IMAGES="${IMG} ${INSTALLATION_FAILED_IMAGES}"
 	    # Sending mail with log
 	    if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}.log ]]; then
-	        echo "<< no log output during the build phase >>" >  ${OUT}/${IMG}${STABLE_SUFFIX}.log
+	        echo "no log output during the build phase" >  ${OUT}/${IMG}${STABLE_SUFFIX}.log
 	    fi
 	    sendAlert "Packages INSTALLATION failed on ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}.log"
 	else
