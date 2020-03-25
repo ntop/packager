@@ -98,8 +98,8 @@ mkdir -p ${OUT}/generic
 
 WHEEZY_BACKPORTS="RUN grep -q 'wheezy-backports' /etc/apt/sources.list || echo 'deb http\\://ftp.debian.org/debian wheezy-backports main' >> /etc/apt/sources.list"
 JESSIE_BACKPORTS="RUN echo 'deb http\\://archive.debian.org/debian jessie-backports main' >> /etc/apt/sources.list \\&\\& echo 'Acquire\\:\\:Check-Valid-Until no;' > /etc/apt/apt.conf.d/99no-check-valid-until \\&\\& apt-get update \\&\\& apt-get install libjson-c2"
-# Debian buster needs to have 'contrib' in sources.list for package geoipupdate
-BUSTER_APT_SOURCES_LIST="RUN sed -i 's/main/main contrib/g' /etc/apt/sources.list" #"sed -i 's/main/main contrib/g' /etc/apt/sources.list"
+# Debian buster and stretch need to have 'contrib' in sources.list for package geoipupdate
+APT_SOURCES_LIST="RUN sed -i 's/main/main contrib/g' /etc/apt/sources.list" #"sed -i 's/main/main contrib/g' /etc/apt/sources.list"
 UBUNTU14_PPA="RUN apt-get -y install software-properties-common \\&\\& add-apt-repository ppa\\:maxmind/ppa \\&\\& apt-get update"
 UBUNTU18_REPOSITORIES="RUN apt-get update \\&\\& apt-get -y -q install gnupg software-properties-common \\&\\& add-apt-repository universe"
 
@@ -114,8 +114,8 @@ sed -e "s:VERSION:18.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g
 
 #sed -e "s:VERSION:wheezy:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${WHEEZY_BACKPORTS}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianwheezy
 sed -e "s:VERSION:jessie:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${JESSIE_BACKPORTS}:g" -e "s:APT_SOURCES_LIST::g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianjessie
-sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:APT_SOURCES_LIST::g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianstretch
-sed -e "s:VERSION:buster:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:APT_SOURCES_LIST:${BUSTER_APT_SOURCES_LIST}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbuster
+sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:APT_SOURCES_LIST:${APT_SOURCES_LIST}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianstretch
+sed -e "s:VERSION:buster:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:APT_SOURCES_LIST:${APT_SOURCES_LIST}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbuster
 
 # Raspbian
 #sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.raspbian.seed > ${OUT}/generic/Dockerfile.raspbianstretch
