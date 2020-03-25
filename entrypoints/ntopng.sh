@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # specify here the packages you want to install before running this script
-# TEST_PACKAGES: ntopng ntopng-data
+# TEST_PACKAGES: ntopng
 
 set -e
 
