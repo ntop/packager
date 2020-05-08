@@ -100,15 +100,15 @@ WHEEZY_BACKPORTS="RUN grep -q 'wheezy-backports' /etc/apt/sources.list || echo '
 JESSIE_BACKPORTS="RUN echo 'deb http\\://archive.debian.org/debian jessie-backports main' >> /etc/apt/sources.list \\&\\& echo 'Acquire\\:\\:Check-Valid-Until no;' > /etc/apt/apt.conf.d/99no-check-valid-until \\&\\& apt-get update \\&\\& apt-get install libjson-c2"
 # Debian buster and stretch need to have 'contrib' in sources.list for package geoipupdate
 APT_SOURCES_LIST="RUN sed -i 's/main/main contrib/g' /etc/apt/sources.list" #"sed -i 's/main/main contrib/g' /etc/apt/sources.list"
-UBUNTU14_PPA="RUN apt-get -y install software-properties-common \\&\\& add-apt-repository ppa\\:maxmind/ppa \\&\\& apt-get update"
+# UBUNTU14_PPA="RUN apt-get -y install software-properties-common \\&\\& add-apt-repository ppa\\:maxmind/ppa \\&\\& apt-get update"
 UBUNTU18_REPOSITORIES="RUN apt-get update \\&\\& apt-get -y -q install gnupg software-properties-common \\&\\& add-apt-repository universe"
 
 SALTSTACK="RUN wget https\\://copr.fedoraproject.org/coprs/saltstack/zeromq4/repo/epel-6/saltstack-zeromq4-epel-6.repo \&\& mv saltstack-zeromq4-epel-6.repo /etc/yum.repos.d/ "
 
 # Producing Dockerfile(s)
 
-#sed -e "s:VERSION:12.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:REPOSITORIES::g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu12
-sed -e "s:VERSION:14.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${UBUNTU14_PPA}:g" -e "s:REPOSITORIES::g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu14
+# sed -e "s:VERSION:12.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:REPOSITORIES::g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu12
+# sed -e "s:VERSION:14.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${UBUNTU14_PPA}:g" -e "s:REPOSITORIES::g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu14
 sed -e "s:VERSION:16.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:REPOSITORIES::g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu16
 sed -e "s:VERSION:18.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:REPOSITORIES:${UBUNTU18_REPOSITORIES}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu18
 sed -e "s:VERSION:20.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:REPOSITORIES:${UBUNTU18_REPOSITORIES}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu20
