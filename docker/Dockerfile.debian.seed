@@ -2,7 +2,7 @@ FROM debian:VERSION
 MAINTAINER packager@ntop.org
 
 RUN apt-get update && \
-    apt-get -y -q install wget gnupg lsb-release net-tools ethtool apt-utils && \
+    apt-get -y -q install wget gnupg lsb-release net-tools ethtool apt-utils apt-transport-https ca-certificates && \
     wget -q http://aptSTABLE.ntop.org/VERSION/all/apt-ntopSTABLE.deb && \
     dpkg -i apt-ntopSTABLE.deb && \
     rm -f apt-ntopSTABLE.deb
