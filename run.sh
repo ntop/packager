@@ -114,7 +114,7 @@ sed -e "s:VERSION:18.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g
 sed -e "s:VERSION:20.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:REPOSITORIES:${UBUNTU18_REPOSITORIES}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu20
 
 #sed -e "s:VERSION:wheezy:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${WHEEZY_BACKPORTS}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianwheezy
-sed -e "s:VERSION:jessie:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${JESSIE_BACKPORTS}:g" -e "s:APT_SOURCES_LIST::g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianjessie
+sed -e "s:VERSION:jessie:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${JESSIE_BACKPORTS}:g" -e "s:APT_SOURCES_LIST::g" docker/Dockerfile.debianjessie.seed > ${OUT}/generic/Dockerfile.debianjessie
 sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:APT_SOURCES_LIST:${APT_SOURCES_LIST}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianstretch
 sed -e "s:VERSION:buster:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:APT_SOURCES_LIST:${APT_SOURCES_LIST}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbuster
 
