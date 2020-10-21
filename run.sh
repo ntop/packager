@@ -2,6 +2,7 @@
 
 MAIL_FROM=""
 MAIL_TO=""
+DISCORD_WEBHOOK=""
 
 function usage {
     echo "Usage: run.sh [--cleanup] | [ [-m=stable] -f=<mail from> -t=<mail to> ]"
@@ -39,16 +40,25 @@ function sendAlert {
         else
             echo "$2" | mail -s "$1" -r "${MAIL_FROM}" "${MAIL_TO}"
         fi
-    else
-        echo "[>] $1"
-        echo "---"
-	if [ -n "$3" ] ; then
-            /bin/cat $3
-        else
-            echo "$2"
-        fi
-        echo "---"
     fi
+
+    if [ -n "$DISCORD_WEBHOOK" ] ; then
+	if [ -n "$3" ] ; then
+	    # See https://github.com/ChaoticWeg/discord.sh for the fancy escaping via js
+	    ./discord.sh --webhook-url "${DISCORD_WEBHOOK}" --title "$1" --text "$(jq -Rs . <$3 | cut -c 2- | rev | cut -c 2- | rev | tail -c 2000)" # at most 2k characters
+        else
+	    ./discord.sh --webhook-url "${DISCORD_WEBHOOK}" --title "$1" --text "$2"
+        fi
+    fi
+
+    echo "[>] $1"
+    echo "---"
+    if [ -n "$3" ] ; then
+        /bin/cat $3
+    else
+        echo "$2"
+    fi
+    echo "---"
 }
 
 DOCKER="sudo docker"
@@ -74,14 +84,21 @@ do
 	-t=*|--mail-to=*)
 	    MAIL_TO="${i#*=}"
 	    ;;
+
+	-d=*|--discord-webhook=*)
+	    DISCORD_WEBHOOK="${i#*=}"
+	    ;;
+
 	-c|--cleanup)
 	    cleanup
 	    exit 0
 	    ;;
+
 	-h|--help)
 	    usage
 	    exit 0
 	    ;;
+
 	*)
 	    # unknown option
 	    ;;
@@ -90,6 +107,10 @@ done
 
 if [ -z "$MAIL_FROM" ] || [ -z "$MAIL_TO" ] ; then
     echo "Warning: please specify -f=<from> -t=<to> to send alerts by mail"
+fi
+
+if [ -z "$DISCORD_WEBHOOK" ] ; then
+    echo "Warning: please specify -d=<discord webhook url> to send alerts to Discord"
 fi
 
 OUT="out-${TAG}"
