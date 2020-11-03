@@ -33,32 +33,52 @@ function cleanup {
     fi
 }
 
+# Send an alert
 function sendAlert {
+    #
+    # Parameters:
+    #
+    # $1: A symbol, e.g., :checkered_flag: or :triangular_flag_on_post: that will be prepended to the message title
+    # $2: A title of the message
+    # $3: Body of the message [OPTIONAL]
+    # $4: A path to a file which will be send as body of the message. When $4 is defined, $3 is ignored. [OPTIONAL]
+    #
+    #
     if [ -n "$MAIL_FROM" ] && [ -n "$MAIL_TO" ] ; then
-	if [ -n "$3" ] ; then
-            /bin/cat $3 | mail -s "$1" -r "${MAIL_FROM}" "${MAIL_TO}"
+	if [ -n "$4" ] ; then
+            /bin/cat $4 | mail -s "$1 $2" -r "${MAIL_FROM}" "${MAIL_TO}"
         else
-            echo "$2" | mail -s "$1" -r "${MAIL_FROM}" "${MAIL_TO}"
+            echo "$3" | mail -s "$1 $2" -r "${MAIL_FROM}" "${MAIL_TO}"
         fi
     fi
 
     if [ -n "$DISCORD_WEBHOOK" ] ; then
-	if [ -n "$3" ] ; then
+	if [ -n "$4" ] ; then
 	    # See https://github.com/ChaoticWeg/discord.sh for the fancy escaping via js
-	    ./discord.sh --webhook-url "${DISCORD_WEBHOOK}" --title "$1" --text "$(jq -Rs . <$3 | cut -c 2- | rev | cut -c 2- | rev | tail -c 2000)" # at most 2k characters
+	    ./discord.sh --webhook-url "${DISCORD_WEBHOOK}" --title "$1 $2" --text "$(jq -Rs . <$4 | cut -c 2- | rev | cut -c 2- | rev | tail -c 1000)" # at most 2k characters
         else
-	    ./discord.sh --webhook-url "${DISCORD_WEBHOOK}" --title "$1" --text "$2"
+	    ./discord.sh --webhook-url "${DISCORD_WEBHOOK}" --title "$1 $2" --text "$3"
         fi
     fi
 
-    echo "[>] $1"
+    echo "[>] $2"
     echo "---"
-    if [ -n "$3" ] ; then
-        /bin/cat $3
+    if [ -n "$4" ] ; then
+        /bin/cat $4
     else
-        echo "$2"
+        echo "$3"
     fi
     echo "---"
+}
+
+# Send a success alert
+function sendSuccess {
+    sendAlert ":checkered_flag:" "$1" "$2" "$3"
+}
+
+# Send an error alert
+function sendError {
+    sendAlert ":triangular_flag_on_post:" "$1" "$2" "$3"
 }
 
 DOCKER="sudo docker"
@@ -221,9 +241,9 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 	    INSTALLATION_FAILED_IMAGES="${IMG} ${INSTALLATION_FAILED_IMAGES}"
 	    # Sending mail with log
 	    if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}.log ]]; then
-	        echo "no log output during the build phase" >  ${OUT}/${IMG}${STABLE_SUFFIX}.log
+	        echo "No log output during the BUILD phase" >  "${OUT}/${IMG}${STABLE_SUFFIX}.log"
 	    fi
-	    sendAlert "Packages INSTALLATION failed on ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}.log"
+	    sendError "Packages INSTALLATION failed on ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}.log"
 	else
 	    IMAGES="${IMAGES} ${IMG}"
 
@@ -239,9 +259,9 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 	        FUNCTIONAL_FAILED_IMAGES="${IMG} ${FUNCTIONAL_FAILED_IMAGES}"
 	        # Sending mail with log
 	        if [[ ! -s  ${OUT}/${IMG}${STABLE_SUFFIX}_test.log ]]; then
-	            echo "<< no log output during the test phase >>" >   ${OUT}/${IMG}${STABLE_SUFFIX}_test.log
+	            echo "No log output during the TEST phase" > "${OUT}/${IMG}${STABLE_SUFFIX}_test.log"
 	        fi
-                sendAlert "Packages TEST failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}_test.log"
+                sendError "Packages TEST failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}_test.log"
 	    else
 	        echo "OK"
 	    fi
@@ -255,14 +275,14 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 done
 
 if [ "$INSTALLATION_FAILURES" -ne "0" ]; then
-    sendAlert "${TAG} packages INSTALLATION failed on $INSTALLATION_FAILURES images" "Unable to build docker images: ${INSTALLATION_FAILED_IMAGES}"
+    sendError "${TAG} packages INSTALLATION failed on $INSTALLATION_FAILURES images" "Unable to build docker images: ${INSTALLATION_FAILED_IMAGES}"
 else
-    sendAlert "${TAG} packages INSTALLATION completed successfully" "All docker images built correctly."
+    sendSuccess "${TAG} packages INSTALLATION completed successfully" "All docker images built correctly."
 fi
 
 if [ "$FUNCTIONAL_FAILURES" -ne "0" ]; then
-    sendAlert "${TAG} packages TEST failed on $FUNCTIONAL_FAILURES images" "Unable to TEST docker images: ${FUNCTIONAL_FAILED_IMAGES}"
+    sendError "${TAG} packages TEST failed on $FUNCTIONAL_FAILURES images" "Unable to TEST docker images: ${FUNCTIONAL_FAILED_IMAGES}"
 else
-    sendAlert "${TAG} packages TEST completed successfully" "All docker images test correctly."
+    sendSuccess "${TAG} packages TEST completed successfully" "All docker images test correctly."
 fi
 
