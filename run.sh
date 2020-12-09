@@ -162,12 +162,10 @@ sed -e "s:VERSION:buster:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g"
 # Raspbian
 #sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.raspbian.seed > ${OUT}/generic/Dockerfile.raspbianstretch
 
-# Centos6
-sed -e "s:MINOR:6.10:g" -e "s:CENTOS6::g" -e "s:CENTOS8:#:g" -e "s:MAJOR:6:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK:${SALTSTACK}:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos6
 # Centos7
-sed -e "s:MINOR:7.6.1810:g" -e "s:CENTOS6:#:g" -e "s:CENTOS8:#:g" -e "s:MAJOR:7:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
+sed -e "s:MINOR:7.6.1810:g" -e "s:CENTOS8:#:g" -e "s:MAJOR:7:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
 # Centos8
-sed -e "s:MINOR:8:g"  -e "s:CENTOS6:#:g" -e "s:CENTOS8::g" -e "s:MAJOR:8:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos8
+sed -e "s:MINOR:8:g" -e "s:CENTOS8::g" -e "s:MAJOR:8:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos8
 
 INSTALLATION_FAILURES=0
 INSTALLATION_FAILED_IMAGES=""

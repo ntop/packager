@@ -6,7 +6,6 @@ RUN yum -y update && \
     rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-MAJOR.noarch.rpm && \
     wget -q http://packages.ntop.org/centosSTABLE/ntop.repo -O ntop.repo && \
     mv ntop.repo /etc/yum.repos.d/ && \
-    CENTOS6 rpm -ivh http://packages.ntop.org/rpm6/extra/hiredis-0.10.1-3.el6.x86_64.rpm http://packages.ntop.org/rpm6/extra/hiredis-devel-0.10.1-3.el6.x86_64.rpm
     CENTOS8 rpm -ivh http://rpms.remirepo.net/enterprise/remi-release-8.rpm && yum -y -q install dnf-plugins-core && dnf config-manager --set-enabled PowerTools && dnf config-manager --set-enabled remi
 
 SALTSTACK
