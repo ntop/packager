@@ -1,5 +1,7 @@
 #!/bin/bash
 
+UNAMESTR=`uname` # Used to determine if we are running on FreeBSD
+
 # Send an alert
 function sendAlert {
     #
@@ -13,27 +15,35 @@ function sendAlert {
     #
     if [ -n "$MAIL_FROM" ] && [ -n "$MAIL_TO" ] ; then
 	if [ -n "$4" ] ; then
-            /bin/cat $4 | mail -s "$1 $2" -r "${MAIL_FROM}" "${MAIL_TO}"
-        else
-            echo "$3" | mail -s "$1 $2" -r "${MAIL_FROM}" "${MAIL_TO}"
-        fi
+	    if [ "${UNAMESTR}" == "FreeBSD" ]; then
+		echo -e "Subject: $1 $2\n`/bin/cat $4`" | sendmail -f "${MAIL_FROM}" "${MAIL_TO}"
+	    else
+		/bin/cat $4 | mail -s "$1 $2" "${MAIL_TO}"
+	    fi
+	else
+	    if [ "${UNAMESTR}" == "FreeBSD" ]; then
+		echo -e "Subject: $1 $2\n$3" | sendmail -f "${MAIL_FROM}" "${MAIL_TO}"
+	    else
+		echo "$3" | mail -s "$1 $2" "${MAIL_TO}"
+	    fi
+	fi
     fi
 
     if [ -n "$DISCORD_WEBHOOK" ] ; then
 	if [ -n "$4" ] ; then
 	    # See https://github.com/ChaoticWeg/discord.sh for the fancy escaping via js
 	    ./discord.sh --webhook-url "${DISCORD_WEBHOOK}" --title "$1 $2" --text "$(jq -Rs . <$4 | cut -c 2- | rev | cut -c 2- | rev | tail -c 1000)" # at most 2k characters
-        else
+	else
 	    ./discord.sh --webhook-url "${DISCORD_WEBHOOK}" --title "$1 $2" --text "$3"
-        fi
+	fi
     fi
 
     echo "[>] $2"
     echo "---"
     if [ -n "$4" ] ; then
-        /bin/cat $4
+	/bin/cat $4
     else
-        echo "$3"
+	echo "$3"
     fi
     echo "---"
 }

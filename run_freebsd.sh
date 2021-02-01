@@ -1,8 +1,15 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 MAIL_FROM=""
 MAIL_TO=""
 DISCORD_WEBHOOK=""
+
+#############
+
+# Import alert-related functions
+source ./utils/alerts.sh
+
+#############
 
 function usage {
     echo "Usage: run.sh [--bootstrap] | [--cleanup] | [ -f=<mail from> -t=<mail to> ]"
@@ -190,6 +197,9 @@ done
 # if [ -z "$DISCORD_WEBHOOK" ] ; then
 #    echo "Warning: please specify -d=<discord webhook url> to send alerts to Discord"
 # fi
+
+# sendSuccess "packages INSTALLATION completed successfully" "" "/etc/passwd"
+# sendError "${TAG} packages TEST failed on $FUNCTIONAL_FAILURES images" "Unable to TEST docker images: ${FUNCTIONAL_FAILED_IMAGES}"
 
 test_jail "freebsd11_4" "11.4-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:11:amd64/latest/ntop-1.0.txz"
 test_jail "freebsd12_2" "12.2-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:12:amd64/latest/ntop-1.0.txz"
