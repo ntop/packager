@@ -139,10 +139,18 @@ function test_jail {
 
     # Test the products
     jexec $1 /usr/local/bin/bash -c "ntopng --version"
-    jexec $1 /usr/local/bin/bash -c "ntopng -h"
+    if jexec $1 /usr/local/bin/bash -c "ntopng -h"; then
+	sendSuccess "FreeBSD $2 ntopng package TEST completed successfully" "All tests run correctly."
+    else
+	sendError "FreeBSD $2 ntopng package TEST failed" "Unable to TEST ntopng package"
+    fi
 
     jexec $1 /usr/local/bin/bash -c "nprobe --version"
-    jexec $1 /usr/local/bin/bash -c "nprobe -h"
+    if jexec $1 /usr/local/bin/bash -c "nprobe -h"; then
+	sendSuccess "FreeBSD $2 nprobe package TEST completed successfully" "All tests run correctly."
+    else
+	sendError "FreeBSD $2 nprobe package TEST failed" "Unable to TEST nprobe package"
+    fi
 
     # Done, stop the jail
     service jail stop $1
