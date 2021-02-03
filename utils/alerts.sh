@@ -1,6 +1,8 @@
 #!/bin/bash
 
 UNAMESTR=`uname` # Used to determine if we are running on FreeBSD
+UTILS_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+DISCORD_SH="${UTILS_DIR}/discord.sh"
 
 # Send an alert
 function sendAlert {
@@ -32,9 +34,9 @@ function sendAlert {
     if [ -n "$DISCORD_WEBHOOK" ] ; then
 	if [ -n "$4" ] ; then
 	    # See https://github.com/ChaoticWeg/discord.sh for the fancy escaping via js
-	    ./discord.sh --webhook-url "${DISCORD_WEBHOOK}" --title "$1 $2" --text "$(jq -Rs . <$4 | cut -c 2- | rev | cut -c 2- | rev | tail -c 1000)" # at most 2k characters
+	    ${DISCORD_SH} --webhook-url "${DISCORD_WEBHOOK}" --title "$1 $2" --text "$(jq -Rs . <$4 | cut -c 2- | rev | cut -c 2- | rev | tail -c 1000)" # at most 2k characters
 	else
-	    ./discord.sh --webhook-url "${DISCORD_WEBHOOK}" --title "$1 $2" --text "$3"
+	    ${DISCORD_SH} --webhook-url "${DISCORD_WEBHOOK}" --title "$1 $2" --text "$3"
 	fi
     fi
 
