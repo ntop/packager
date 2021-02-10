@@ -20,13 +20,13 @@ function sendAlert {
 	    if [ "${UNAMESTR}" == "FreeBSD" ]; then
 		echo -e "Subject: $1 $2\n`/bin/cat $4`" | sendmail -f "${MAIL_FROM}" "${MAIL_TO}"
 	    else
-		/bin/cat $4 | mail -s "$1 $2" "${MAIL_TO}"
+		/bin/cat $4 | mail -a "From: ${MAIL_FROM}" -s "$1 $2" "${MAIL_TO}"
 	    fi
 	else
 	    if [ "${UNAMESTR}" == "FreeBSD" ]; then
 		echo -e "Subject: $1 $2\n$3" | sendmail -f "${MAIL_FROM}" "${MAIL_TO}"
 	    else
-		echo "$3" | mail -s "$1 $2" "${MAIL_TO}"
+		echo "$3" | mail -a "From: ${MAIL_FROM}" -s "$1 $2" "${MAIL_TO}"
 	    fi
 	fi
     fi
