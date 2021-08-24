@@ -3,13 +3,19 @@
 MAIL_FROM=""
 MAIL_TO=""
 DISCORD_WEBHOOK=""
+RELEASE=""  # e.g., centos7, debianbuster, ubuntu20
+PACKAGE="" # e.g., cento, n2disk, nprobe, ntopng, pfring
 
 # Import functions to send out alerts
 source utils/alerts.sh
 
 function usage {
-    echo "Usage: run.sh [--cleanup] | [ [-m=stable] -f=<mail from> -t=<mail to> -d=<discord webhook>]"
+    echo "Usage: run.sh [--cleanup] | [ [-m=stable] -f=<mail from> -t=<mail to> -d=<discord webhook> -r=<release> -p=<package>]"
     echo ""
+    echo "-r|----release   : Builds for a specific release. Optional, all releases are built when not specified."
+    echo "                   Available releases: centos7, debianbuster, debianjessie, debianstretch, ubuntu16, ubuntu18, ubuntu20."
+    echo "-p|--package     : Builds a specific package. Optional, all packages are built when not specified."
+    echo "                   Available packages: cento, n2disk, nprobe, ntopng, pfring."
     echo "-c|--cleanup     : clears all docker images and containers"
     echo ""
     echo "This tool will build some empty docker containers where ntop packages"
@@ -62,6 +68,14 @@ do
 
 	-d=*|--discord-webhook=*)
 	    DISCORD_WEBHOOK="${i#*=}"
+	    ;;
+
+	-r=*|--release=*)
+	    RELEASE="${i#*=}"
+	    ;;
+
+	-p=*|--package=*)
+	    PACKAGE="${i#*=}"
 	    ;;
 
 	-c|--cleanup)
@@ -138,11 +152,13 @@ cleanup
 # ########################################################################################################################
 
 for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
+    DOCKERFILE_RELEASE="${DOCKERFILE_GENERIC##*.}"
+
     for ENTRYPOINT in entrypoints/*.sh; do
         ENTRYPOINT_SH=`basename ${ENTRYPOINT}`
         PACKAGES_LIST=`cat $ENTRYPOINT | grep TEST_PACKAGES | cut -d ':' -f 2 | xargs`
 
-	IMG="${DOCKERFILE_GENERIC##*.}.${TAG}.${PACKAGES_LIST// /.}"
+	IMG="${DOCKERFILE_RELEASE}.${TAG}.${PACKAGES_LIST// /.}"
 	DOCKERFILE=${OUT}/Dockerfile.${IMG}
 
         # #################################################################################################################
@@ -163,6 +179,20 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 
 	if [ "$IMG" = "seed" ]; then
 	    continue
+	fi
+
+	if [ ! -z "${RELEASE}" ]; then
+	    if [ "x${RELEASE}" != "x${DOCKERFILE_RELEASE}" ]; then
+		# A specific release has been requested, skip releases that are not matching
+		continue
+	    fi
+	fi
+
+	if [ ! -z "${PACKAGE}" ]; then
+	    if [ "x${PACKAGE}" != "x${PACKAGES_LIST}" ]; then
+		# A specific package has been requested, skip releases that are not matching
+		continue
+	    fi
 	fi
 
 	echo "Preparing docker image ${IMG} [packages: $PACKAGES_LIST] [entrypoint: $ENTRYPOINT]"
