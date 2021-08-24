@@ -13,7 +13,7 @@ function usage {
     echo "Usage: run.sh [--cleanup] | [ [-m=stable] -f=<mail from> -t=<mail to> -d=<discord webhook> -r=<release> -p=<package>]"
     echo ""
     echo "-r|----release   : Builds for a specific release. Optional, all releases are built when not specified."
-    echo "                   Available releases: centos7, debianbuster, debianjessie, debianstretch, ubuntu16, ubuntu18, ubuntu20."
+    echo "                   Available releases: centos7, debianbuster, debianjessie, debianstretch, debianbullseye, ubuntu16, ubuntu18, ubuntu20."
     echo "-p|--package     : Builds a specific package. Optional, all packages are built when not specified."
     echo "                   Available packages: cento, n2disk, nprobe, ntopng, pfring."
     echo "-c|--cleanup     : clears all docker images and containers"
@@ -127,6 +127,7 @@ sed -e "s:VERSION:20.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g
 sed -e "s:VERSION:jessie:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${JESSIE_BACKPORTS}:g" -e "s:APT_SOURCES_LIST::g" docker/Dockerfile.debianjessie.seed > ${OUT}/generic/Dockerfile.debianjessie
 sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:APT_SOURCES_LIST:${APT_SOURCES_LIST}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianstretch
 sed -e "s:VERSION:buster:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:APT_SOURCES_LIST:${APT_SOURCES_LIST}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbuster
+sed -e "s:VERSION:bullseye:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:APT_SOURCES_LIST:${APT_SOURCES_LIST}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbullseye
 
 # Raspbian
 #sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.raspbian.seed > ${OUT}/generic/Dockerfile.raspbianstretch
