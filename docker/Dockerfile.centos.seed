@@ -2,8 +2,7 @@ FROM centos:MINOR
 MAINTAINER packager@ntop.org
 
 RUN yum -y update && \
-    yum -y -q install wget mysql-libs && \
-    rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-MAJOR.noarch.rpm && \
+    yum -y -q install wget mysql-libs epel-release && \
     wget -q http://packages.ntop.org/centosSTABLE/ntop.repo -O ntop.repo && \
     mv ntop.repo /etc/yum.repos.d/ && \
     CENTOS8 rpm -ivh http://rpms.remirepo.net/enterprise/remi-release-8.rpm && yum -y -q install dnf-plugins-core && dnf config-manager --set-enabled PowerTools && dnf config-manager --set-enabled remi
