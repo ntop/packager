@@ -14,7 +14,12 @@ source ./utils/alerts.sh
 function usage {
     echo "Usage: run.sh [--bootstrap] | [--cleanup] | [ -f=<mail from> -t=<mail to> ]"
     echo ""
+    echo "-b|--bootstrap"
     echo "-c|--cleanup "
+    echo "-f|--mail-from=<email from>"
+    echo "-t|--mail-to=<email to>"
+    echo "-d|--discord-webhook=<discord webhook>"
+    echo "-h|--help"
     echo ""
     echo "This tool will test FreeBSD images"
     exit 0
@@ -93,6 +98,7 @@ exec.stop="sh /etc/rc.shutdown";
 # 7. specific jail configuration
 freebsd11_4 {}
 freebsd12_2 {}
+freebsd13_0 {}
 EOF
 }
 
@@ -165,6 +171,7 @@ do
 	    cleanup
 	    bootstrap_release "freebsd11_4" "11.4-RELEASE"
 	    bootstrap_release "freebsd12_2" "12.2-RELEASE"
+	    bootstrap_release "freebsd13_0" "13.0-RELEASE"
 	    bootstrap_jails
 	    exit 0
 	    ;;
@@ -172,6 +179,7 @@ do
 	-c|--cleanup)
 	    cleanup "freebsd11_4"
 	    cleanup "freebsd12_2"
+	    cleanup "freebsd13_0"
 	    exit 0
 	    ;;
 
@@ -211,4 +219,5 @@ done
 
 test_jail "freebsd11_4" "11.4-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:11:amd64/latest/ntop-1.0.txz"
 test_jail "freebsd12_2" "12.2-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:12:amd64/latest/ntop-1.0.txz"
+test_jail "freebsd13_0" "13.0-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:13:amd64/latest/ntop-1.0.txz"
 
