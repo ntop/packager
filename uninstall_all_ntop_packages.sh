@@ -6,7 +6,7 @@
 # This script removes all the installed ntop packages
 #
 
-PACKAGES="cento e1000e-zc-dkms fm10k-zc-dkms i40e-zc-dkms ice-zc-dkms igb-zc-dkms ixgbevf-zc-dkms ixgbe-zc-dkms n2disk n2n nbox ndpi ndpi-dev nedge nprobe nprobe-agent nprobe-dev nprobes nscrub ntopng ntopng-data pfring pfring-dkms pfring-drivers-zc-dkms"
+PACKAGES="cento e1000e-zc-dkms fm10k-zc-dkms i40e-zc-dkms ice-zc-dkms igb-zc-dkms ixgbevf-zc-dkms ixgbe-zc-dkms n2disk n2n nbox ndpi ndpi-dev nedge nprobe nprobe-agent nprobe-dev nprobes nscrub ntopng ntopng-data nedge pfring pfring-dkms pfring-drivers-zc-dkms"
 
 # Deinstall as last package
 PACKAGES="$PACKAGES apt-ntop"
