@@ -182,6 +182,11 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 	    continue
 	fi
 
+	if [ "$PACKAGES_LIST" = "nedge" ] && [[ ${IMG} != ubuntu20.* ]]; then
+	    # nedge is supported on Ubuntu only
+	    continue
+	fi
+
 	if [ ! -z "${RELEASE}" ]; then
 	    if [ "x${RELEASE}" != "x${DOCKERFILE_RELEASE}" ]; then
 		# A specific release has been requested, skip releases that are not matching
