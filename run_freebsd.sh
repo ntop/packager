@@ -169,7 +169,7 @@ do
     case $i in
 	-b|--bootstrap)
 	    cleanup
-	    bootstrap_release "freebsd11_4" "11.4-RELEASE"
+	    #bootstrap_release "freebsd11_4" "11.4-RELEASE"
 	    bootstrap_release "freebsd12_2" "12.2-RELEASE"
 	    bootstrap_release "freebsd13_0" "13.0-RELEASE"
 	    bootstrap_jails
@@ -177,7 +177,7 @@ do
 	    ;;
 
 	-c|--cleanup)
-	    cleanup "freebsd11_4"
+	    #cleanup "freebsd11_4"
 	    cleanup "freebsd12_2"
 	    cleanup "freebsd13_0"
 	    exit 0
@@ -217,7 +217,7 @@ done
 # sendSuccess "packages INSTALLATION completed successfully" "" "/etc/passwd"
 # sendError "${TAG} packages TEST failed on $FUNCTIONAL_FAILURES images" "Unable to TEST docker images: ${FUNCTIONAL_FAILED_IMAGES}"
 
-test_jail "freebsd11_4" "11.4-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:11:amd64/latest/ntop-1.0.txz"
+#test_jail "freebsd11_4" "11.4-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:11:amd64/latest/ntop-1.0.txz"
 test_jail "freebsd12_2" "12.2-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:12:amd64/latest/ntop-1.0.txz"
 test_jail "freebsd13_0" "13.0-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:13:amd64/latest/ntop-1.0.txz"
 
