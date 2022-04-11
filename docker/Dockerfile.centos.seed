@@ -7,7 +7,7 @@ RUN yum -y update && \
     mv ntop.repo /etc/yum.repos.d/
 RUN CENTOS7 yum -y -q install epel-release
 RUN CENTOS8 yum -y -q install epel-release && rpm -ivh http://rpms.remirepo.net/enterprise/remi-release-8.rpm && yum -y -q install dnf-plugins-core && dnf config-manager --set-enabled PowerTools && dnf config-manager --set-enabled remi
-RUN ROCKYLINUX8 dnf -y install 'dnf-command(config-manager)' && dnf config-manager --set-enabled PowerTools
+RUN ROCKYLINUX8 dnf -y install dnf-plugins-core && dnf -y install epel-release && dnf config-manager --set-enabled powertools
 
 SALTSTACK
 
