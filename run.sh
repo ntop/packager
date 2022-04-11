@@ -3,7 +3,7 @@
 MAIL_FROM=""
 MAIL_TO=""
 DISCORD_WEBHOOK=""
-RELEASE=""  # e.g., centos7, debianbuster, ubuntu20
+RELEASE=""  # e.g., centos7, rockylinux8, debianbuster, ubuntu20
 PACKAGE="" # e.g., cento, n2disk, nprobe, ntopng, nedge, pfring
 
 # Import functions to send out alerts
@@ -13,7 +13,7 @@ function usage {
     echo "Usage: run.sh [--cleanup] | [ [-m=stable] -f=<mail from> -t=<mail to> -d=<discord webhook> -r=<release> -p=<package>]"
     echo ""
     echo "-r|----release   : Builds for a specific release. Optional, all releases are built when not specified."
-    echo "                   Available releases: centos7, debianbuster, debianstretch, debianbullseye, ubuntu18, ubuntu20."
+    echo "                   Available releases: centos7, rockylinux8, debianbuster, debianstretch, debianbullseye, ubuntu18, ubuntu20."
     echo "-p|--package     : Builds a specific package. Optional, all packages are built when not specified."
     echo "                   Available packages: cento, n2disk, nprobe, ntopng, nedge, pfring."
     echo "-c|--cleanup     : clears all docker images and containers"
@@ -133,9 +133,11 @@ sed -e "s:VERSION:bullseye:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::
 #sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.raspbian.seed > ${OUT}/generic/Dockerfile.raspbianstretch
 
 # Centos7
-sed -e "s:MINOR:7.6.1810:g" -e "s:CENTOS8:#:g" -e "s:MAJOR:7:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
+sed -e "s:DISTRIBUTION:centos:g"     -e "s:MINOR:7.6.1810:g" -e "s:CENTOS7::g"  -e "s:CENTOS8:#:g" -e "s:ROCKYLINUX8:#:g" -e "s:MAJOR:7:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
 # Centos8
-sed -e "s:MINOR:8:g" -e "s:CENTOS8::g" -e "s:MAJOR:8:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos8
+sed -e "s:DISTRIBUTION:centos:g"     -e "s:MINOR:8:g"        -e "s:CENTOS7:#:g" -e "s:CENTOS8::g"  -e "s:ROCKYLINUX8:#:g" -e "s:MAJOR:8:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos8
+# Rocky Linux
+sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:MINOR:8:g"        -e "s:CENTOS7:#:g" -e "s:CENTOS8:#:g" -e "s:ROCKYLINUX8::g"  -e "s:MAJOR:8:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux8
 
 INSTALLATION_FAILURES=0
 INSTALLATION_FAILED_IMAGES=""
@@ -166,7 +168,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         # INSTALLATION TEST
         # #################################################################################################################
 
-	if [ "centos8.development.n2disk" == ${IMG} ] || [ "centos8.stable.n2disk" == ${IMG} ]; then
+	if [ "centos8.development.n2disk" == ${IMG} ] || [ "centos8.stable.n2disk" == ${IMG} ] || [ "rockylinux8.development.n2disk" == ${IMG} ] || [ "rockylinux8.stable.n2disk" == ${IMG} ]; then
 	    # Seems n2disk on centos8 attempts to install kernel-related stuff which is not supported on docker
 	    continue
 	fi
