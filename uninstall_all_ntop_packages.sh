@@ -9,7 +9,7 @@
 PACKAGES="cento e1000e-zc-dkms fm10k-zc-dkms i40e-zc-dkms ice-zc-dkms igb-zc-dkms ixgbevf-zc-dkms ixgbe-zc-dkms n2disk n2n nbox ndpi ndpi-dev nedge nprobe nprobe-agent nprobe-dev nprobes nscrub ntopng ntopng-data nedge pfring pfring-dkms pfring-drivers-zc-dkms"
 
 # Deinstall as last package
-PACKAGES="$PACKAGES apt-ntop"
+PACKAGES="$PACKAGES apt-ntop apt-ntop-stable"
 
 # Check if the script is running as root
 if [ "$EUID" -ne 0 ]
