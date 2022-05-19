@@ -3,7 +3,7 @@
 MAIL_FROM=""
 MAIL_TO=""
 DISCORD_WEBHOOK=""
-RELEASE=""  # e.g., centos7, rockylinux8, debianbuster, ubuntu20
+RELEASE=""  # e.g., centos7, rockylinux8, debianbuster, ubuntu20, ubuntu22
 PACKAGE="" # e.g., cento, n2disk, nprobe, ntopng, nedge, pfring
 
 # Import functions to send out alerts
@@ -13,7 +13,7 @@ function usage {
     echo "Usage: run.sh [--cleanup] | [ [-m=stable] -f=<mail from> -t=<mail to> -d=<discord webhook> -r=<release> -p=<package>]"
     echo ""
     echo "-r|----release   : Builds for a specific release. Optional, all releases are built when not specified."
-    echo "                   Available releases: centos7, rockylinux8, debianbuster, debianstretch, debianbullseye, ubuntu18, ubuntu20."
+    echo "                   Available releases: centos7, rockylinux8, debianbuster, debianstretch, debianbullseye, ubuntu18, ubuntu20, ubuntu22."
     echo "-p|--package     : Builds a specific package. Optional, all packages are built when not specified."
     echo "                   Available packages: cento, n2disk, nprobe, ntopng, nedge, pfring."
     echo "-c|--cleanup     : clears all docker images and containers"
@@ -122,6 +122,7 @@ SALTSTACK="RUN wget https\\://copr.fedoraproject.org/coprs/saltstack/zeromq4/rep
 # sed -e "s:VERSION:16.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:REPOSITORIES::g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu16
 sed -e "s:VERSION:18.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:REPOSITORIES:${UBUNTU18_REPOSITORIES}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu18
 sed -e "s:VERSION:20.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:REPOSITORIES:${UBUNTU18_REPOSITORIES}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu20
+sed -e "s:VERSION:22.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:REPOSITORIES:${UBUNTU18_REPOSITORIES}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu22
 
 #sed -e "s:VERSION:wheezy:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${WHEEZY_BACKPORTS}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianwheezy
 # sed -e "s:VERSION:jessie:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS:${JESSIE_BACKPORTS}:g" -e "s:APT_SOURCES_LIST::g" docker/Dockerfile.debianjessie.seed > ${OUT}/generic/Dockerfile.debianjessie
@@ -185,7 +186,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 	fi
 
 	if [ "$PACKAGES_LIST" = "nedge" ] && [[ ${IMG} != ubuntu20.* ]]; then
-	    # nedge is supported on Ubuntu only
+	    # nedge is supported on Ubuntu 20 only
 	    continue
 	fi
 
