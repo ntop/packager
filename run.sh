@@ -174,6 +174,12 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 	    continue
 	fi
 
+	if [[ ${IMG} == ubuntu22.stable.* ]]; then
+	    # Stable packages for Ubuntu 22 are still not available
+	    # skip until they are released
+	    continue
+	fi
+
 	if [[ ${IMG} == centos8.* ]]; then
 	    # Seems centos8 has the rpmdb broken on docker
 	    # https://github.com/ansible/awx/issues/6306
