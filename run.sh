@@ -10,13 +10,15 @@ PACKAGE="" # e.g., cento, n2disk, nprobe, ntopng, nedge, pfring
 source utils/alerts.sh
 
 function usage {
-    echo "Usage: run.sh [--cleanup] | [ [-m=stable] -f=<mail from> -t=<mail to> -d=<discord webhook> -r=<release> -p=<package>]"
+    echo "Usage: run.sh [--cleanup] | [-m=stable] [-f=<mail from>] [-t=<mail to>] [-d=<discord webhook>] [-r=<release>] [-p=<package>]"
     echo ""
-    echo "-r|--release     : Builds for a specific release. Optional, all releases are built when not specified."
-    echo "                   Available releases: centos7, rockylinux8, debianbuster, debianstretch, debianbullseye, ubuntu18, ubuntu20, ubuntu22."
-    echo "-p|--package     : Builds a specific package. Optional, all packages are built when not specified."
-    echo "                   Available packages: cento, n2disk, nprobe, ntopng, nedge, pfring."
-    echo "-c|--cleanup     : clears all docker images and containers"
+    echo "-m=<branch>                : Select branch."
+    echo "                             Available branches: (default: dev), stable."
+    echo "-r|--release=<release>     : Builds for a specific release. Optional, all releases are built when not specified."
+    echo "                             Available releases: centos7, rockylinux8, debianstretch (9), debianbuster (10), debianbullseye (11), ubuntu18, ubuntu20, ubuntu22."
+    echo "-p|--package=<package>     : Builds a specific package. Optional, all packages are built when not specified."
+    echo "                             Available packages: cento, n2disk, nprobe, ntopng, nedge, pfring."
+    echo "-c|--cleanup               : clears all docker images and containers"
     echo ""
     echo "This tool will build some empty docker containers where ntop packages"
     echo "will be installed. This tool will make some tests and report"
