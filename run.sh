@@ -12,7 +12,7 @@ source utils/alerts.sh
 function usage {
     echo "Usage: run.sh [--cleanup] | [ [-m=stable] -f=<mail from> -t=<mail to> -d=<discord webhook> -r=<release> -p=<package>]"
     echo ""
-    echo "-r|----release   : Builds for a specific release. Optional, all releases are built when not specified."
+    echo "-r|--release     : Builds for a specific release. Optional, all releases are built when not specified."
     echo "                   Available releases: centos7, rockylinux8, debianbuster, debianstretch, debianbullseye, ubuntu18, ubuntu20, ubuntu22."
     echo "-p|--package     : Builds a specific package. Optional, all packages are built when not specified."
     echo "                   Available packages: cento, n2disk, nprobe, ntopng, nedge, pfring."
