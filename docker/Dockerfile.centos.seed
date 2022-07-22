@@ -2,7 +2,7 @@ FROM DISTRIBUTION:VERSION
 MAINTAINER packager@ntop.org
 
 RUN yum -y update && \
-    yum -y -q install wget mysql-libs && \
+    yum -y -q install wget && \
     wget -q http://packages.ntop.org/centosSTABLE/ntop.repo -O ntop.repo && \
     mv ntop.repo /etc/yum.repos.d/
 RUN CENTOS7 yum -y -q install epel-release
