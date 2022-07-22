@@ -181,6 +181,11 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 	    continue
 	fi
 
+	if [[ ${IMG} == rockylinux9.stable.* ]]; then
+	    # Skip rockylinux9 for stable packages (dev only for the time being)
+	    continue
+	fi
+
 	if [[ ${IMG} == centos8.* ]]; then
 	    # Seems centos8 has the rpmdb broken on docker
 	    # https://github.com/ansible/awx/issues/6306
