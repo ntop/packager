@@ -115,8 +115,6 @@ APT_SOURCES_LIST="RUN sed -i 's/main/main contrib/g' /etc/apt/sources.list" #"se
 # UBUNTU14_PPA="RUN apt-get -y install software-properties-common \\&\\& add-apt-repository ppa\\:maxmind/ppa \\&\\& apt-get update"
 UBUNTU18_REPOSITORIES="RUN apt-get update \\&\\& apt-get -y -q install gnupg software-properties-common \\&\\& add-apt-repository universe"
 
-SALTSTACK="RUN wget https\\://copr.fedoraproject.org/coprs/saltstack/zeromq4/repo/epel-6/saltstack-zeromq4-epel-6.repo \&\& mv saltstack-zeromq4-epel-6.repo /etc/yum.repos.d/ "
-
 # Producing Dockerfile(s)
 
 # sed -e "s:VERSION:12.04:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::g" -e "s:REPOSITORIES::g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu12
@@ -136,11 +134,13 @@ sed -e "s:VERSION:bullseye:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:BACKPORTS::
 #sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.raspbian.seed > ${OUT}/generic/Dockerfile.raspbianstretch
 
 # Centos7
-sed -e "s:DISTRIBUTION:centos:g"     -e "s:MINOR:7.6.1810:g" -e "s:CENTOS7::g"  -e "s:CENTOS8:#:g" -e "s:ROCKYLINUX8:#:g" -e "s:MAJOR:7:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
+sed -e "s:DISTRIBUTION:centos:g"     -e "s:VERSION:7.6.1810:g" -e "s:CENTOS7::g"  -e "s:CENTOS8:#:g" -e "s:ROCKYLINUX:#:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
 # Centos8
-sed -e "s:DISTRIBUTION:centos:g"     -e "s:MINOR:8:g"        -e "s:CENTOS7:#:g" -e "s:CENTOS8::g"  -e "s:ROCKYLINUX8:#:g" -e "s:MAJOR:8:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos8
-# Rocky Linux
-sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:MINOR:8:g"        -e "s:CENTOS7:#:g" -e "s:CENTOS8:#:g" -e "s:ROCKYLINUX8::g"  -e "s:MAJOR:8:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:SALTSTACK::g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux8
+sed -e "s:DISTRIBUTION:centos:g"     -e "s:VERSION:8:g"        -e "s:CENTOS7:#:g" -e "s:CENTOS8::g"  -e "s:ROCKYLINUX:#:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos8
+# Rocky Linux 8
+sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:8:g"        -e "s:CENTOS7:#:g" -e "s:CENTOS8:#:g" -e "s:ROCKYLINUX::g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:powertools:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux8
+# Rocky Linux 9
+sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:9:g"        -e "s:CENTOS7:#:g" -e "s:CENTOS8:#:g" -e "s:ROCKYLINUX::g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:crb:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux9
 
 INSTALLATION_FAILURES=0
 INSTALLATION_FAILED_IMAGES=""
@@ -171,7 +171,12 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         # INSTALLATION TEST
         # #################################################################################################################
 
-	if [ "centos8.development.n2disk" == ${IMG} ] || [ "centos8.stable.n2disk" == ${IMG} ] || [ "rockylinux8.development.n2disk" == ${IMG} ] || [ "rockylinux8.stable.n2disk" == ${IMG} ]; then
+	if [ "centos8.development.n2disk" == ${IMG} ] || 
+           [ "centos8.stable.n2disk" == ${IMG} ] || 
+           [ "rockylinux8.development.n2disk" == ${IMG} ] || 
+           [ "rockylinux8.stable.n2disk" == ${IMG} ] ||
+           [ "rockylinux9.development.n2disk" == ${IMG} ] || 
+           [ "rockylinux9.stable.n2disk" == ${IMG} ]; then
 	    # Seems n2disk on centos8 attempts to install kernel-related stuff which is not supported on docker
 	    continue
 	fi
