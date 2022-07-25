@@ -6,9 +6,9 @@ MAINTAINER packager@ntop.org
 RUN apt-get update && \
     apt-get -y -q install wget gnupg lsb-release net-tools ethtool apt-utils && \
     wget -q http://aptSTABLE.ntop.org/VERSION/all/apt-ntopSTABLE.deb && \
+    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 8E07231F05757F56FECE39773D84C955924F7599 && \
     dpkg -i apt-ntopSTABLE.deb ; apt-get install -y -f && \
-    rm -f apt-ntopSTABLE.deb && \
-    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 8E07231F05757F56FECE39773D84C955924F7599
+    rm -f apt-ntopSTABLE.deb
 
 BACKPORTS
 APT_SOURCES_LIST
