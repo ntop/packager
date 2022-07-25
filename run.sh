@@ -3,7 +3,7 @@
 MAIL_FROM=""
 MAIL_TO=""
 DISCORD_WEBHOOK=""
-RELEASE=""  # e.g., centos7, rockylinux8, debianbuster, ubuntu20, ubuntu22
+RELEASE=""  # e.g., centos7, rockylinux8, rockylinux9, debianbuster, ubuntu20, ubuntu22
 PACKAGE="" # e.g., cento, n2disk, nprobe, ntopng, nedge, pfring
 
 # Import functions to send out alerts
@@ -15,7 +15,7 @@ function usage {
     echo "-m=<branch>                : Select branch."
     echo "                             Available branches: (default: dev), stable."
     echo "-r|--release=<release>     : Builds for a specific release. Optional, all releases are built when not specified."
-    echo "                             Available releases: centos7, rockylinux8, debianstretch (9), debianbuster (10), debianbullseye (11), ubuntu18, ubuntu20, ubuntu22."
+    echo "                             Available releases: centos7, rockylinux8, rockylinux9, debianstretch (9), debianbuster (10), debianbullseye (11), ubuntu18, ubuntu20, ubuntu22."
     echo "-p|--package=<package>     : Builds a specific package. Optional, all packages are built when not specified."
     echo "                             Available packages: cento, n2disk, nprobe, ntopng, nedge, pfring."
     echo "-c|--cleanup               : clears all docker images and containers"
