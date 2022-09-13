@@ -113,7 +113,7 @@ WHEEZY_BACKPORTS="RUN grep -q 'wheezy-backports' /etc/apt/sources.list || echo '
 # Debian buster and stretch need to have 'contrib' in sources.list for package geoipupdate
 APT_SOURCES_LIST="RUN sed -i 's/main/main contrib/g' /etc/apt/sources.list" #"sed -i 's/main/main contrib/g' /etc/apt/sources.list"
 # UBUNTU14_PPA="RUN apt-get -y install software-properties-common \\&\\& add-apt-repository ppa\\:maxmind/ppa \\&\\& apt-get update"
-UBUNTU18_REPOSITORIES="RUN apt-get update \\&\\& apt-get -y -q install gnupg software-properties-common \\&\\& add-apt-repository universe"
+UBUNTU18_REPOSITORIES="RUN apt-get update \\&\\& apt-get -y -q install software-properties-common \\&\\& add-apt-repository universe"
 
 # Producing Dockerfile(s)
 
