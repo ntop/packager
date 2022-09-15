@@ -1,7 +1,9 @@
 FROM ubuntu:VERSION
 MAINTAINER packager@ntop.org
 
-REPOSITORIES
+RUN apt-get update && \
+    apt-get -y -q install software-properties-common && \
+    add-apt-repository universe
 
 RUN apt-get update && \
     apt-get -y -q install wget lsb-release && \
@@ -11,8 +13,6 @@ RUN apt-get update && \
     rm -f apt-ntopSTABLE.deb && \
     apt-get clean all && \
     apt-get update
-
-BACKPORTS
 
 RUN apt-get -y install PACKAGES_LIST
 RUN apt-get -y remove PACKAGES_LIST

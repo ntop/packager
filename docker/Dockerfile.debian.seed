@@ -8,8 +8,7 @@ RUN apt-get update && \
     rm -f apt-ntopSTABLE.deb && \
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 8E07231F05757F56FECE39773D84C955924F7599
 
-BACKPORTS
-APT_SOURCES_LIST
+RUN sed -i 's/main/main contrib/g' /etc/apt/sources.list
 
 RUN apt-get clean all && \
     apt-get update
