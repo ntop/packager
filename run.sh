@@ -4,7 +4,7 @@ MAIL_FROM=""
 MAIL_TO=""
 DISCORD_WEBHOOK=""
 RELEASE=""  # e.g., centos7, rockylinux8, rockylinux9, debianbuster, ubuntu20, ubuntu22
-PACKAGE="" # e.g., cento, n2disk, nprobe, ntopng, nedge, pfring
+PACKAGE="" # e.g., cento, n2disk, nprobe, ntopng, nedge, nscrub, pfring
 
 # Import functions to send out alerts
 source utils/alerts.sh
@@ -17,7 +17,7 @@ function usage {
     echo "-r|--release=<release>     : Builds for a specific release. Optional, all releases are built when not specified."
     echo "                             Available releases: centos7, rockylinux8, rockylinux9, debianstretch (9), debianbuster (10), debianbullseye (11), ubuntu18, ubuntu20, ubuntu22."
     echo "-p|--package=<package>     : Builds a specific package. Optional, all packages are built when not specified."
-    echo "                             Available packages: cento, n2disk, nprobe, ntopng, nedge, pfring."
+    echo "                             Available packages: cento, n2disk, nprobe, ntopng, nedge, nscrub, pfring."
     echo "-c|--cleanup               : clears all docker images and containers"
     echo ""
     echo "This tool will build some empty docker containers where ntop packages"
