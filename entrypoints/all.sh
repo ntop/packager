@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # specify here the packages you want to install before running this script
-# TEST_PACKAGES: pfring n2disk cento nprobe ntopng nscrub
+# TEST_PACKAGES: pfring n2disk cento nprobe ntopng nscrub ntap
 # NOTE: we do not install nbox as it's not available on all platforms
 
 set -e
