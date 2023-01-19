@@ -159,6 +159,13 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         # INSTALLATION TEST
         # #################################################################################################################
 
+	if [ "debianbullseye*.ntap" == ${IMG} ] ||
+	   [ "centos*.ntap" == ${IMG} ] || 
+           [ "rockylinux*.ntap" == ${IMG} ]; then
+	    # Skip ntap for distrubutions with no package
+	    continue
+	fi
+
 	if [ "centos8.development.n2disk" == ${IMG} ] || 
            [ "centos8.stable.n2disk" == ${IMG} ] || 
            [ "rockylinux8.development.n2disk" == ${IMG} ] || 
