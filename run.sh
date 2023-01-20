@@ -159,7 +159,8 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         # INSTALLATION TEST
         # #################################################################################################################
 
-	if [ "debianbullseye*.ntap" == ${IMG} ] ||
+	if [ "*.stable.*" == ${IMG} ] ||
+	   [ "debianbullseye*.ntap" == ${IMG} ] ||
 	   [ "centos*.ntap" == ${IMG} ] || 
            [ "rockylinux*.ntap" == ${IMG} ]; then
 	    # Skip ntap for distrubutions with no package
