@@ -324,17 +324,24 @@ send()
     # results should be empty if there's no problem. otherwise, there should be code and message
     local _result
 
-     _result=$(curl -H "Content-Type: application/json" -H "Expect: application/json" -X POST "${webhook_url}" -d "${_sendme}" 2>/dev/null)
-     send_ok=$?
-     [[ "${send_ok}" -ne 0 ]] && echo "fatal: curl failed with code ${send_ok}" && exit $send_ok
+    # Handle multiple webhooks as a space-saparated list (send to all)
+    for url in ${webhook_url}
+    do
 
-     _result=$(echo "${_result}" | jq '.')
+        _result=$(curl -H "Content-Type: application/json" -H "Expect: application/json" -X POST "${url}" -d "${_sendme}" 2>/dev/null)
 
-    # if we have a result, there was a problem. echo and exit.
-    [[ -n "${_result}" ]] && \
-        echo error! "${_result}" && \
-        echo attempted to send: "$(echo "${_sendme}" | jq '.')" && \
-        exit 1
+        # error checking 
+        send_ok=$?
+        [[ "${send_ok}" -ne 0 ]] && echo "fatal: curl failed with code ${send_ok}" && exit $send_ok
+
+        _result=$(echo "${_result}" | jq '.')
+
+        # if we have a result, there was a problem. echo and exit.
+        [[ -n "${_result}" ]] && \
+            echo error! "${_result}" && \
+            echo attempted to send: "$(echo "${_sendme}" | jq '.')" && \
+            exit 1
+        done
 
     exit 0
 }
@@ -363,19 +370,24 @@ send_file() {
     [[ -n "${is_dry}" ]] && [[ "${is_dry}" -ne 0 ]] && \
         echo "${_json}" && exit 0
 
-    # send with correct Content-Type and url-encoded data
-    curl -i \
-        -H "Expect: application/json" \
-        -F "file=@${file_path}" \
-        -F "payload_json=${_json}" \
-        "${webhook_url}" >/dev/null 2>&1
+    # Handle multiple webhooks as a space-saparated list (send to all)
+    for url in ${webhook_url}
+    do
 
-    # error checking 
+        # send with correct Content-Type and url-encoded data
+        curl -i \
+            -H "Expect: application/json" \
+            -F "file=@${file_path}" \
+            -F "payload_json=${_json}" \
+            "${url}" >/dev/null 2>&1
 
-    sent_ok=$?
-    [[ "${sent_ok}" -eq 0 ]] && exit 0
+        # error checking 
+        send_ok=$?
+        [[ "${send_ok}" -ne 0 ]] && echo "fatal: curl exited with code ${send_ok} when sending file \"${file_path}\"" && exit $send_ok
 
-    echo "fatal: curl exited with code ${sent_ok} when sending file \"${file_path}\""
+    done
+
+    exit 0
 }
 
 
