@@ -13,7 +13,7 @@ function sendAlert {
     # $2: A title of the message
     # $3: Body of the message [OPTIONAL]
     # $4: A path to a file which will be send as body of the message. When $4 is defined, $3 is ignored. [OPTIONAL]
-    #
+    # $5: Use the first N channels to send the message, out of those provided in DISCORD_WEBHOOK (Default: 1) [OPTIONAL]
     #
     if [ -n "$MAIL_FROM" ] && [ -n "$MAIL_TO" ] ; then
 	if [ -n "$4" ] ; then
@@ -52,10 +52,10 @@ function sendAlert {
 
 # Send a success alert
 function sendSuccess {
-    sendAlert ":checkered_flag:" "$1" "$2" "$3"
+    sendAlert ":checkered_flag:" "$1" "$2" "$3" "$4"
 }
 
 # Send an error alert
 function sendError {
-    sendAlert ":triangular_flag_on_post:" "$1" "$2" "$3"
+    sendAlert ":triangular_flag_on_post:" "$1" "$2" "$3" "$4"
 }

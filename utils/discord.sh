@@ -39,7 +39,7 @@ General options:
   --help                         Display this help and exit
   --text <text>                  Body text of message to send
   --tts                          Send message with text-to-speech enabled
-  --webhook-url                  Specify the Discord webhook URL
+  --webhook-url                  Specify the Discord webhook URL (space-separated list)
 
 Identity options:
   --username <name>              Set username to <name>
@@ -69,7 +69,10 @@ Image:
 Footer:
   --footer <text>                Display <text> in footer
   --footer-icon <url>            Display image located at <url> in footer
-  --timestamp                    Display timestamp"
+  --timestamp                    Display timestamp
+
+Broadcasting:
+  --channels <num>               Use the first N channels out of those listed in --webhook-url"
 
 # HELP TEXT PLEASE
 [[ "$#" -eq 0 ]] && echo "$help_text" && exit 0
@@ -151,6 +154,10 @@ while (( "$#" )); do
         --file=*) file_path=${1/--file=/''}; has_file=1; shift;;
         --file*) file_path=${2}; has_file=1; shift; shift;;
 
+	# broadcasting
+        --channels=*) num_channels=${1/--channels=/''}; shift;;
+        --channels*) num_channels=${2}; shift; shift;;
+
         # unknown argument. bail out
 
         *) echo "fatal: unknown argument '${1}'"; exit 1;;
@@ -170,6 +177,8 @@ done
 # no webhook could be found. bail out
 [[ -z ${webhook_url} ]] && echo "fatal: no --webhook-url passed or no .webhook file to read from" && exit 1;
 
+# default number of webhooks to use
+[[ -z ${num_channels} ]] && num_channels=1
 
 enforce_limits() {
     # title <= 256
@@ -325,8 +334,13 @@ send()
     local _result
 
     # Handle multiple webhooks as a space-saparated list (send to all)
+    count=1
     for url in ${webhook_url}
     do
+
+        if [ $count -gt "$num_channels" ]; then
+		break
+	fi
 
         _result=$(curl -H "Content-Type: application/json" -H "Expect: application/json" -X POST "${url}" -d "${_sendme}" 2>/dev/null)
 
@@ -341,7 +355,10 @@ send()
             echo error! "${_result}" && \
             echo attempted to send: "$(echo "${_sendme}" | jq '.')" && \
             exit 1
-        done
+
+	((count++))
+
+    done
 
     exit 0
 }
@@ -371,8 +388,13 @@ send_file() {
         echo "${_json}" && exit 0
 
     # Handle multiple webhooks as a space-saparated list (send to all)
+    count=1
     for url in ${webhook_url}
     do
+
+        if [ $count -gt "$num_channels" ]; then
+		break
+	fi
 
         # send with correct Content-Type and url-encoded data
         curl -i \
@@ -384,6 +406,8 @@ send_file() {
         # error checking 
         send_ok=$?
         [[ "${send_ok}" -ne 0 ]] && echo "fatal: curl exited with code ${send_ok} when sending file \"${file_path}\"" && exit $send_ok
+
+	((count++))
 
     done
 

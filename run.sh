@@ -275,7 +275,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 done
 
 if [ "$INSTALLATION_FAILURES" -ne "0" ]; then
-    sendError "${TAG} packages INSTALLATION failed on $INSTALLATION_FAILURES images" "Unable to build docker images: ${INSTALLATION_FAILED_IMAGES}"
+    sendError "${TAG} packages INSTALLATION failed on $INSTALLATION_FAILURES images" "Unable to build docker images: ${INSTALLATION_FAILED_IMAGES}" "" "2"
 else
     sendSuccess "${TAG} packages INSTALLATION completed successfully" "All docker images built correctly."
 fi
