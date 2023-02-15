@@ -281,7 +281,7 @@ else
 fi
 
 if [ "$FUNCTIONAL_FAILURES" -ne "0" ]; then
-    sendError "${TAG} packages TEST failed on $FUNCTIONAL_FAILURES images" "Unable to TEST docker images: ${FUNCTIONAL_FAILED_IMAGES}"
+    sendError "${TAG} packages TEST failed on $FUNCTIONAL_FAILURES images" "Unable to TEST docker images: ${FUNCTIONAL_FAILED_IMAGES}" "" "2"
 else
     sendSuccess "${TAG} packages TEST completed successfully" "All docker images test correctly."
 fi
