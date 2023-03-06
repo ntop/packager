@@ -12,7 +12,7 @@ source ./utils/alerts.sh
 #############
 
 function usage {
-    echo "Usage: run.sh [--bootstrap] | [--cleanup] | [ -f=<mail from> -t=<mail to> ]"
+    echo "Usage: run_freebsd.sh [--bootstrap] | [--cleanup] | [ -f=<mail from> -t=<mail to> ]"
     echo ""
     echo "-b|--bootstrap"
     echo "-c|--cleanup "
@@ -31,7 +31,7 @@ function cleanup {
     # $1 is the jail name, .e.g, "freebsd11_4"
 
     # Stop all jails
-    service jail stop $1
+    service jail onestop $1
 
     ## Remove all jail files
     if [ -d /jail/$1 ]; then
@@ -72,7 +72,7 @@ function bootstrap_release {
 
 function bootstrap_jails {
     # Stop all jails
-    service jail stop
+    service jail onestop
 
     cat <<EOF > /etc/jail.conf
 # 1. definition of variables that we'll use through the config file
@@ -96,9 +96,8 @@ exec.start="sh /etc/rc";
 exec.stop="sh /etc/rc.shutdown";
 
 # 7. specific jail configuration
-freebsd11_4 {}
-freebsd12_2 {}
-freebsd13_0 {}
+freebsd12_4 {}
+freebsd13_1 {}
 EOF
 }
 
@@ -110,7 +109,7 @@ function test_jail {
     # $3 is the ntop package URL, e.g., "https://packages.ntop.org/FreeBSD/FreeBSD:11:amd64/latest/ntop-1.0.txz"
 
     # Start the jail
-    service jail start $1
+    service jail onestart $1
 
     # Install dependencies
     pkg -j $1 install -y bash
@@ -159,7 +158,7 @@ function test_jail {
     fi
 
     # Done, stop the jail
-    service jail stop $1
+    service jail onestop $1
 }
 
 #############
@@ -169,17 +168,15 @@ do
     case $i in
 	-b|--bootstrap)
 	    cleanup
-	    #bootstrap_release "freebsd11_4" "11.4-RELEASE"
-	    bootstrap_release "freebsd12_2" "12.2-RELEASE"
-	    bootstrap_release "freebsd13_0" "13.0-RELEASE"
+	    bootstrap_release "freebsd12_4" "12.4-RELEASE"
+	    bootstrap_release "freebsd13_1" "13.1-RELEASE"
 	    bootstrap_jails
 	    exit 0
 	    ;;
 
 	-c|--cleanup)
-	    #cleanup "freebsd11_4"
-	    cleanup "freebsd12_2"
-	    cleanup "freebsd13_0"
+	    cleanup "freebsd12_4"
+	    cleanup "freebsd13_1"
 	    exit 0
 	    ;;
 
@@ -217,7 +214,6 @@ done
 # sendSuccess "packages INSTALLATION completed successfully" "" "/etc/passwd"
 # sendError "${TAG} packages TEST failed on $FUNCTIONAL_FAILURES images" "Unable to TEST docker images: ${FUNCTIONAL_FAILED_IMAGES}"
 
-#test_jail "freebsd11_4" "11.4-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:11:amd64/latest/ntop-1.0.txz"
-test_jail "freebsd12_2" "12.2-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:12:amd64/latest/ntop-1.0.txz"
-test_jail "freebsd13_0" "13.0-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:13:amd64/latest/ntop-1.0.txz"
+test_jail "freebsd12_4" "12.4-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:12:amd64/latest/ntop-1.0.txz"
+test_jail "freebsd13_1" "13.1-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:13:amd64/latest/ntop-1.0.pkg"
 
