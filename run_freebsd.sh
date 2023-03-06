@@ -147,14 +147,14 @@ function test_jail {
     if jexec $1 /usr/local/bin/bash -c "ntopng -h"; then
 	sendSuccess "FreeBSD $2 ntopng package TEST completed successfully" "All tests run correctly."
     else
-	sendError "FreeBSD $2 ntopng package TEST failed" "Unable to TEST ntopng package"
+	sendError "FreeBSD $2 ntopng package TEST failed" "Unable to TEST ntopng package" "" "2"
     fi
 
     jexec $1 /usr/local/bin/bash -c "nprobe --version"
     if jexec $1 /usr/local/bin/bash -c "nprobe -h"; then
 	sendSuccess "FreeBSD $2 nprobe package TEST completed successfully" "All tests run correctly."
     else
-	sendError "FreeBSD $2 nprobe package TEST failed" "Unable to TEST nprobe package"
+	sendError "FreeBSD $2 nprobe package TEST failed" "Unable to TEST nprobe package" "" "2"
     fi
 
     # Done, stop the jail
@@ -210,9 +210,6 @@ done
 # if [ -z "$DISCORD_WEBHOOK" ] ; then
 #    echo "Warning: please specify -d=<discord webhook url> to send alerts to Discord"
 # fi
-
-# sendSuccess "packages INSTALLATION completed successfully" "" "/etc/passwd"
-# sendError "${TAG} packages TEST failed on $FUNCTIONAL_FAILURES images" "Unable to TEST docker images: ${FUNCTIONAL_FAILED_IMAGES}"
 
 test_jail "freebsd12_4" "12.4-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:12:amd64/latest/ntop-1.0.txz"
 test_jail "freebsd13_1" "13.1-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:13:amd64/latest/ntop-1.0.pkg"
