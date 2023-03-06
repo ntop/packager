@@ -119,5 +119,5 @@ done
 #    echo "Warning: please specify -d=<discord webhook url> to send alerts to Discord"
 # fi
 
-test_installation "https://packages.ntop.org/FreeBSD/FreeBSD:13:amd64/latest/ntop-1.0.txz"
+test_installation "https://packages.ntop.org/FreeBSD/FreeBSD:13:amd64/latest/ntop-1.0.pkg"
 
