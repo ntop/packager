@@ -6,6 +6,12 @@ DISCORD_WEBHOOK=""
 
 #############
 
+OUT="out"
+/bin/rm -rf ${OUT}
+mkdir -p ${OUT}
+
+#############
+
 # Import alert-related functions
 source ./utils/alerts.sh
 
@@ -147,14 +153,18 @@ function test_jail {
     if jexec $1 /usr/local/bin/bash -c "ntopng -h"; then
 	sendSuccess "FreeBSD $2 ntopng package TEST completed successfully" "All tests run correctly."
     else
-	sendError "FreeBSD $2 ntopng package TEST failed" "Unable to TEST ntopng package" "" "2"
+	LOG_FILE="${OUT}/ntopng-${1}.log"
+        jexec $1 /usr/local/bin/bash -c "ntopng -h" &> "${LOG_FILE}"
+	sendError "FreeBSD $2 ntopng package TEST failed" "Unable to TEST ntopng package" "${LOG_FILE}" "2"
     fi
 
     jexec $1 /usr/local/bin/bash -c "nprobe --version"
     if jexec $1 /usr/local/bin/bash -c "nprobe -h"; then
 	sendSuccess "FreeBSD $2 nprobe package TEST completed successfully" "All tests run correctly."
     else
-	sendError "FreeBSD $2 nprobe package TEST failed" "Unable to TEST nprobe package" "" "2"
+	LOG_FILE="${OUT}/nprobe-${1}.log"
+        jexec $1 /usr/local/bin/bash -c "nprobe -h" &> "${LOG_FILE}"
+	sendError "FreeBSD $2 nprobe package TEST failed" "Unable to TEST nprobe package" "$LOG_FILE" "2"
     fi
 
     # Done, stop the jail
