@@ -31,16 +31,16 @@ function cleanup {
 
     CONT=$(${DOCKER} ps -a -q | xargs)
     if [[ $CONT ]]; then
-	echo "Cleaning up containers: ${CONT}"
-	${DOCKER} rm -f ${CONT}
+        echo "Cleaning up containers: ${CONT}"
+        ${DOCKER} rm -f ${CONT}
     fi
 
     # clean only the images that are prefixed with TAG
     #IMGS=$(${DOCKER} images -q --filter "dangling=true" | xargs)
     IMGS=$(${DOCKER} images -q | xargs)
     if [[ $IMGS ]]; then
-	echo "Cleaning up images: ${IMGS}"
-	${DOCKER} rmi -f ${IMGS}
+        echo "Cleaning up images: ${IMGS}"
+        ${DOCKER} rmi -f ${IMGS}
     fi
 }
 
@@ -53,46 +53,46 @@ STABLE_SUFFIX=""
 for i in "$@"
 do
     case $i in
-	-m=*|--mode=*)
-	    if [ "${i#*=}" == "stable" ]; then
-		STABLE_SUFFIX="-stable"
-		TAG="stable"
-	    fi
-	    ;;
+        -m=*|--mode=*)
+            if [ "${i#*=}" == "stable" ]; then
+                STABLE_SUFFIX="-stable"
+                TAG="stable"
+            fi
+            ;;
 
-	-f=*|--mail-from=*)
-	    MAIL_FROM="${i#*=}"
-	    ;;
+        -f=*|--mail-from=*)
+            MAIL_FROM="${i#*=}"
+            ;;
 
-	-t=*|--mail-to=*)
-	    MAIL_TO="${i#*=}"
-	    ;;
+        -t=*|--mail-to=*)
+            MAIL_TO="${i#*=}"
+            ;;
 
-	-d=*|--discord-webhook=*)
-	    DISCORD_WEBHOOK="${i#*=}"
-	    ;;
+        -d=*|--discord-webhook=*)
+            DISCORD_WEBHOOK="${i#*=}"
+            ;;
 
-	-r=*|--release=*)
-	    RELEASE="${i#*=}"
-	    ;;
+        -r=*|--release=*)
+            RELEASE="${i#*=}"
+            ;;
 
-	-p=*|--package=*)
-	    PACKAGE="${i#*=}"
-	    ;;
+        -p=*|--package=*)
+            PACKAGE="${i#*=}"
+            ;;
 
-	-c|--cleanup)
-	    cleanup
-	    exit 0
-	    ;;
+        -c|--cleanup)
+            cleanup
+            exit 0
+            ;;
 
-	-h|--help)
-	    usage
-	    exit 0
-	    ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
 
-	*)
-	    # unknown option
-	    ;;
+        *)
+            # unknown option
+            ;;
     esac
 done
 
@@ -152,121 +152,120 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         ENTRYPOINT_SH=`basename ${ENTRYPOINT}`
         PACKAGES_LIST=`cat $ENTRYPOINT | grep TEST_PACKAGES | cut -d ':' -f 2 | xargs`
 
-	IMG="${DOCKERFILE_RELEASE}.${TAG}.${PACKAGES_LIST// /.}"
-	DOCKERFILE=${OUT}/Dockerfile.${IMG}
+        IMG="${DOCKERFILE_RELEASE}.${TAG}.${PACKAGES_LIST// /.}"
+        DOCKERFILE=${OUT}/Dockerfile.${IMG}
 
         # #################################################################################################################
         # INSTALLATION TEST
         # #################################################################################################################
 
-	if [[ "${IMG}" =~ "debianbullseye.".*"ntap".* ]] ||
-	   #[[ "${IMG}" =~ .*".stable.".*"ntap".* ]] ||
-	   [[ "${IMG}" =~ "centos.".*"ntap".* ]] || 
+        if [[ "${IMG}" =~ "debianbullseye.".*"ntap".* ]] ||
+           #[[ "${IMG}" =~ .*".stable.".*"ntap".* ]] ||
+           [[ "${IMG}" =~ "centos.".*"ntap".* ]] || 
            [[ "${IMG}" =~ "rockylinux.".*"ntap".* ]]; then
-	    # Skip ntap for distrubutions with no package
-	    continue
-	fi
+            # Skip ntap for distrubutions with no package
+            continue
+        fi
 
-	if [ "centos8.development.n2disk" == ${IMG} ] || 
+        if [ "centos8.development.n2disk" == ${IMG} ] || 
            [ "centos8.stable.n2disk" == ${IMG} ] || 
            [ "rockylinux8.development.n2disk" == ${IMG} ] || 
            [ "rockylinux8.stable.n2disk" == ${IMG} ] ||
            [ "rockylinux9.development.n2disk" == ${IMG} ] || 
            [ "rockylinux9.stable.n2disk" == ${IMG} ]; then
-	    # Seems n2disk on centos8 attempts to install kernel-related stuff which is not supported on docker
-	    continue
-	fi
+            # Seems n2disk on centos8 attempts to install kernel-related stuff which is not supported on docker
+            continue
+        fi
 
-	#if [[ "${IMG}" =~ "rockylinux9.stable.".* ]]; then
-	#    # Skip rockylinux9 for stable packages (dev only for the time being)
-	#    continue
-	#fi
+        #if [[ "${IMG}" =~ "rockylinux9.stable.".* ]]; then
+        #    # Skip rockylinux9 for stable packages (dev only for the time being)
+        #    continue
+        #fi
 
-	if [[ "${IMG}" =~ "centos8.".* ]]; then
-	    # Seems centos8 has the rpmdb broken on docker
-	    # https://github.com/ansible/awx/issues/6306
-	    # must skip until this is solved
-	    continue
-	fi
+        if [[ "${IMG}" =~ "centos8.".* ]]; then
+            # Seems centos8 has the rpmdb broken on docker
+            # https://github.com/ansible/awx/issues/6306
+            # must skip until this is solved
+            continue
+        fi
 
-	if [ "$IMG" = "seed" ]; then
-	    continue
-	fi
+        if [ "$IMG" = "seed" ]; then
+            continue
+        fi
 
-	if [ "$PACKAGES_LIST" = "nedge" ] && [[ ${IMG} != ubuntu20.* ]]; then
-	    # nedge is supported on Ubuntu 20 only
-	    continue
-	fi
+        if [ "$PACKAGES_LIST" = "nedge" ] && [[ ${IMG} != ubuntu20.* ]]; then
+            # nedge is supported on Ubuntu 20 only
+            continue
+        fi
 
-	if [ ! -z "${RELEASE}" ]; then
-	    if [ "x${RELEASE}" != "x${DOCKERFILE_RELEASE}" ]; then
-		# A specific release has been requested, skip releases that are not matching
-		continue
-	    fi
-	fi
+        if [ ! -z "${RELEASE}" ]; then
+            if [ "x${RELEASE}" != "x${DOCKERFILE_RELEASE}" ]; then
+                # A specific release has been requested, skip releases that are not matching
+                continue
+            fi
+        fi
 
-	if [ ! -z "${PACKAGE}" ]; then
-	    if [ "x${PACKAGE}" != "x${PACKAGES_LIST}" ]; then
-		# A specific package has been requested, skip releases that are not matching
-		continue
-	    fi
-	fi
+        if [ ! -z "${PACKAGE}" ]; then
+            if [ "x${PACKAGE}" != "x${PACKAGES_LIST}" ]; then
+                # A specific package has been requested, skip releases that are not matching
+                continue
+            fi
+        fi
 
-	echo "Preparing docker image ${IMG} [packages: $PACKAGES_LIST] [entrypoint: $ENTRYPOINT]"
+        echo "Preparing docker image ${IMG} [packages: $PACKAGES_LIST] [entrypoint: $ENTRYPOINT]"
 
-	sed -e "s:PACKAGES_LIST:${PACKAGES_LIST}:g" \
-	    -e "s:ENTRYPOINT_PATH:${ENTRYPOINT}:g" \
-	    -e "s:ENTRYPOINT_SH:${ENTRYPOINT_SH}:g" \
-	    ${DOCKERFILE_GENERIC} > ${DOCKERFILE}
+        sed -e "s:PACKAGES_LIST:${PACKAGES_LIST}:g" \
+            -e "s:ENTRYPOINT_PATH:${ENTRYPOINT}:g" \
+            -e "s:ENTRYPOINT_SH:${ENTRYPOINT_SH}:g" \
+            ${DOCKERFILE_GENERIC} > ${DOCKERFILE}
 
-	MAX_ATTEMPTS=2
-	attempt=1
-	while [ $attempt -le $MAX_ATTEMPTS ]
-	do
-	    echo "Running ${DOCKER} build --no-cache -t ${IMG} -f ${DOCKERFILE} ."
+        MAX_ATTEMPTS=2
+        attempt=1
+        while [ $attempt -le $MAX_ATTEMPTS ]
+        do
+            echo "Running ${DOCKER} build --no-cache -t ${IMG} -f ${DOCKERFILE} ."
 
-	    ${DOCKER} build --no-cache -t ${IMG} -f ${DOCKERFILE} . &> ${OUT}/${IMG}${STABLE_SUFFIX}.log
+            ${DOCKER} build --no-cache -t ${IMG} -f ${DOCKERFILE} . &> ${OUT}/${IMG}${STABLE_SUFFIX}.log
 
-	    if [ $? == 0 ]; then break; fi
+            if [ $? == 0 ]; then break; fi
 
-	    let attempt=attempt+1
-	    echo -e "Attempt #$attempt.."
-	done
+            let attempt=attempt+1
+            echo -e "Attempt #$attempt.."
+        done
 
-	if [ "$attempt" -gt "$MAX_ATTEMPTS" ];
-	then
-	    echo "Failed ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . &> ${OUT}/${IMG}${STABLE_SUFFIX}.log"
-	    echo "Failure, see ${OUT}/${IMG}${STABLE_SUFFIX}.log for more details"
-	    let INSTALLATION_FAILURES=INSTALLATION_FAILURES+1
-	    INSTALLATION_FAILED_IMAGES="${IMG} ${INSTALLATION_FAILED_IMAGES}"
-	    # Sending mail with log
-	    if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}.log ]]; then
-	        echo "No log output during the BUILD phase" >  "${OUT}/${IMG}${STABLE_SUFFIX}.log"
-	    fi
-	    sendError "Packages INSTALLATION failed on ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}.log"
-	else
-	    IMAGES="${IMAGES} ${IMG}"
+        if [ "$attempt" -gt "$MAX_ATTEMPTS" ];
+        then
+            echo "FAIL Failed ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . [see ${OUT}/${IMG}${STABLE_SUFFIX}.log for more details]"
+            let INSTALLATION_FAILURES=INSTALLATION_FAILURES+1
+            INSTALLATION_FAILED_IMAGES="${IMG} ${INSTALLATION_FAILED_IMAGES}"
+            # Sending mail with log
+            if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}.log ]]; then
+                echo "No log output during the BUILD phase" >  "${OUT}/${IMG}${STABLE_SUFFIX}.log"
+            fi
+            sendError "Packages INSTALLATION failed on ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}.log"
+        else
+            IMAGES="${IMAGES} ${IMG}"
 
             # #################################################################################################################
             # FUNCTIONAL TESTS
             # #################################################################################################################
 
-	    echo -n "Testing ${IMG}... "
-	    ${DOCKER} run ${IMG} test &> ${OUT}/${IMG}${STABLE_SUFFIX}_test.log
-	    if [ $? != 0 ]; then
-	        echo "FAIL Failed to execute: ${DOCKER} run ${IMG} test [see ${OUT}/${IMG}${STABLE_SUFFIX}_test.log for more details]"
-	        let FUNCTIONAL_FAILURES=FUNCTIONAL_FAILURES+1
-	        FUNCTIONAL_FAILED_IMAGES="${IMG} ${FUNCTIONAL_FAILED_IMAGES}"
-	        # Sending mail with log
-	        if [[ ! -s  ${OUT}/${IMG}${STABLE_SUFFIX}_test.log ]]; then
-	            echo "No log output during the TEST phase" > "${OUT}/${IMG}${STABLE_SUFFIX}_test.log"
-	        fi
+            echo -n "Testing ${IMG}... "
+            ${DOCKER} run ${IMG} test &> ${OUT}/${IMG}${STABLE_SUFFIX}_test.log
+            if [ $? != 0 ]; then
+                echo "FAIL Failed to execute: ${DOCKER} run ${IMG} test [see ${OUT}/${IMG}${STABLE_SUFFIX}_test.log for more details]"
+                let FUNCTIONAL_FAILURES=FUNCTIONAL_FAILURES+1
+                FUNCTIONAL_FAILED_IMAGES="${IMG} ${FUNCTIONAL_FAILED_IMAGES}"
+                # Sending mail with log
+                if [[ ! -s  ${OUT}/${IMG}${STABLE_SUFFIX}_test.log ]]; then
+                    echo "No log output during the TEST phase" > "${OUT}/${IMG}${STABLE_SUFFIX}_test.log"
+                fi
                 sendError "Packages TEST failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}_test.log"
-	    else
-	        echo "OK"
-	    fi
+            else
+                echo "OK"
+            fi
 
-	fi
+        fi
     done
 
     # Cleaning up created images/containers to make room on disk
