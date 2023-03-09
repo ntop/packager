@@ -20,7 +20,7 @@ source ./utils/alerts.sh
 function usage {
     echo "Usage: run_freebsd.sh [--bootstrap] | [--cleanup] | [ -f=<mail from> -t=<mail to> ]"
     echo ""
-    echo "-b|--bootstrap"
+    echo "-b|--bootstrap [run this manually as requires interactive mode]"
     echo "-c|--cleanup "
     echo "-f|--mail-from=<email from>"
     echo "-t|--mail-to=<email to>"
@@ -41,6 +41,7 @@ function cleanup {
 
     ## Remove all jail files
     if [ -d /jail/$1 ]; then
+        umount /jail/$1/dev
 	chflags -R noschg /jail/$1
 	rm -rf /jail/$1
     fi
@@ -177,7 +178,8 @@ for i in "$@"
 do
     case $i in
 	-b|--bootstrap)
-	    cleanup
+	    cleanup "freebsd12_4"
+	    cleanup "freebsd13_1"
 	    bootstrap_release "freebsd12_4" "12.4-RELEASE"
 	    bootstrap_release "freebsd13_1" "13.1-RELEASE"
 	    bootstrap_jails
