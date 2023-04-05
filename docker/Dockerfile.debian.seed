@@ -1,6 +1,9 @@
 FROM debian:VERSION
 MAINTAINER packager@ntop.org
 
+# Fix container detection on latest docker which creates /.dockerenv too late
+RUN touch /.dockerenv
+
 RUN apt-get update && \
     apt-get -y -q install wget gnupg lsb-release net-tools ethtool apt-utils && \
     wget -q http://aptSTABLE.ntop.org/VERSION/all/apt-ntopSTABLE.deb && \

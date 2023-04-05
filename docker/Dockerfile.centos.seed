@@ -1,6 +1,9 @@
 FROM DISTRIBUTION:VERSION
 MAINTAINER packager@ntop.org
 
+# Fix container detection on latest docker which creates /.dockerenv too late
+RUN touch /.dockerenv
+
 RUN yum -y update && \
     yum -y -q install wget && \
     wget -q http://packages.ntop.org/centosSTABLE/ntop.repo -O ntop.repo && \

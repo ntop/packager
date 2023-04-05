@@ -1,6 +1,9 @@
 FROM ubuntu:VERSION
 MAINTAINER packager@ntop.org
 
+# Fix container detection on latest docker which creates /.dockerenv too late
+RUN touch /.dockerenv
+
 RUN apt-get update && \
     apt-get -y -q install software-properties-common && \
     add-apt-repository universe

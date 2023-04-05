@@ -1,6 +1,9 @@
 FROM debian:VERSION
 MAINTAINER packager@ntop.org
 
+# Fix container detection on latest docker which creates /.dockerenv too late
+RUN touch /.dockerenv
+
 # Debian jessie doesn't support apt install so ne need to install using dpkg -i and then fix missing dependencies with apt-get install -f
 
 RUN apt-get update && \
