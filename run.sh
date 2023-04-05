@@ -110,24 +110,22 @@ mkdir -p ${OUT}/generic
 
 # Producing Dockerfile(s)
 
+# Ubuntu
 sed -e "s:VERSION:18.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu18
 sed -e "s:VERSION:20.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu20
 sed -e "s:VERSION:22.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu22
 
+# Debian
 sed -e "s:VERSION:stretch:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianstretch
 sed -e "s:VERSION:buster:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbuster
 sed -e "s:VERSION:bullseye:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbullseye
 
-# Raspbian
-#sed -e "s:VERSION:stretch:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.raspbian.seed > ${OUT}/generic/Dockerfile.raspbianstretch
-
-# Centos7
+# Centos
 sed -e "s:DISTRIBUTION:centos:g"     -e "s:VERSION:7.6.1810:g" -e "s:CENTOS7::g"  -e "s:CENTOS8:#:g" -e "s:ROCKYLINUX:#:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
-# Centos8
 sed -e "s:DISTRIBUTION:centos:g"     -e "s:VERSION:8:g"        -e "s:CENTOS7:#:g" -e "s:CENTOS8::g"  -e "s:ROCKYLINUX:#:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos8
-# Rocky Linux 8
+
+# Rocky Linux
 sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:8:g"        -e "s:CENTOS7:#:g" -e "s:CENTOS8:#:g" -e "s:ROCKYLINUX::g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:powertools:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux8
-# Rocky Linux 9
 sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:9:g"        -e "s:CENTOS7:#:g" -e "s:CENTOS8:#:g" -e "s:ROCKYLINUX::g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:crb:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux9
 
 INSTALLATION_FAILURES=0
@@ -160,7 +158,6 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         # #################################################################################################################
 
         if [[ "${IMG}" =~ "debianbullseye.".*"ntap".* ]] ||
-           #[[ "${IMG}" =~ .*".stable.".*"ntap".* ]] ||
            [[ "${IMG}" =~ "centos.".*"ntap".* ]] || 
            [[ "${IMG}" =~ "rockylinux.".*"ntap".* ]]; then
             # Skip ntap for distrubutions with no package
@@ -176,11 +173,6 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             # Seems n2disk on centos8 attempts to install kernel-related stuff which is not supported on docker
             continue
         fi
-
-        #if [[ "${IMG}" =~ "rockylinux9.stable.".* ]]; then
-        #    # Skip rockylinux9 for stable packages (dev only for the time being)
-        #    continue
-        #fi
 
         if [[ "${IMG}" =~ "centos8.".* ]]; then
             # Seems centos8 has the rpmdb broken on docker
