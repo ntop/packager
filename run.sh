@@ -6,6 +6,10 @@ DISCORD_WEBHOOK=""
 RELEASE=""  # e.g., centos7, rockylinux8, rockylinux9, debianbuster, ubuntu20, ubuntu22
 PACKAGE="" # e.g., cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring
 
+DOCKER="sudo docker"
+TAG="development"
+STABLE_SUFFIX=""
+
 # Import functions to send out alerts
 source utils/alerts.sh
 
@@ -35,18 +39,16 @@ function cleanup {
         ${DOCKER} rm -f ${CONT}
     fi
 
-    # clean only the images that are prefixed with TAG
     #IMGS=$(${DOCKER} images -q --filter "dangling=true" | xargs)
     IMGS=$(${DOCKER} images -q | xargs)
     if [[ $IMGS ]]; then
         echo "Cleaning up images: ${IMGS}"
         ${DOCKER} rmi -f ${IMGS}
     fi
-}
 
-DOCKER="sudo docker"
-TAG="development"
-STABLE_SUFFIX=""
+    # Purge /var/lib/docker/overlay2/
+    ${DOCKER} system prune -a -f
+}
 
 #############
 
