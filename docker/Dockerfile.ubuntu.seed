@@ -11,10 +11,10 @@ RUN apt-get update && \
 RUN apt-get update && \
     apt-get -y -q install wget lsb-release && \
     wget -q http://aptSTABLE.ntop.org/VERSION/all/apt-ntopSTABLE.deb && \
-    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 8E07231F05757F56FECE39773D84C955924F7599 && \
     apt install -y ./apt-ntopSTABLE.deb && \
-    rm -f apt-ntopSTABLE.deb && \
-    apt-get clean all && \
+    rm -f apt-ntopSTABLE.deb
+
+RUN apt-get clean all && \
     apt-get update
 
 RUN apt-get -y install PACKAGES_LIST

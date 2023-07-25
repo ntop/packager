@@ -3,7 +3,7 @@
 MAIL_FROM=""
 MAIL_TO=""
 DISCORD_WEBHOOK=""
-RELEASE=""  # e.g., centos7, rockylinux8, rockylinux9, debianbuster, ubuntu20, ubuntu22
+RELEASE=""  # e.g., centos7, rockylinux8, rockylinux9, debianbuster, debianbullseye, debianbookworm, ubuntu18, ubuntu20, ubuntu22
 PACKAGE="" # e.g., cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring
 
 DOCKER="sudo docker"
@@ -19,7 +19,7 @@ function usage {
     echo "-m=<branch>                : Select branch."
     echo "                             Available branches: (default: dev), stable."
     echo "-r|--release=<release>     : Builds for a specific release. Optional, all releases are built when not specified."
-    echo "                             Available releases: centos7, rockylinux8, rockylinux9, debianbuster (10), debianbullseye (11), ubuntu18, ubuntu20, ubuntu22."
+    echo "                             Available releases: centos7, rockylinux8, rockylinux9, debianbuster (10), debianbullseye (11), debianbookworm (12), ubuntu18, ubuntu20, ubuntu22."
     echo "-p|--package=<package>     : Builds a specific package. Optional, all packages are built when not specified."
     echo "                             Available packages: cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring."
     echo "-c|--cleanup               : clears all docker images and containers"
@@ -121,6 +121,7 @@ sed -e "s:VERSION:22.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ub
 #sed -e "s:VERSION:stretch:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianstretch
 sed -e "s:VERSION:buster:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbuster
 sed -e "s:VERSION:bullseye:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbullseye
+sed -e "s:VERSION:bookworm:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbookworm
 
 # Centos
 sed -e "s:DISTRIBUTION:centos:g"     -e "s:VERSION:7.6.1810:g" -e "s:CENTOS7::g"  -e "s:CENTOS8:#:g" -e "s:ROCKYLINUX:#:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.centos7
@@ -158,6 +159,11 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         # #################################################################################################################
         # INSTALLATION TEST
         # #################################################################################################################
+
+        if [[ "${IMG}" =~ "debianbookworm.stable".* ]]; then
+            # Skip bookworm stable packages for the time being
+            continue
+        fi
 
         if [[ "${IMG}" =~ "debianbullseye.".*"ntap".* ]] ||
            [[ "${IMG}" =~ "centos.".*"ntap".* ]] || 
