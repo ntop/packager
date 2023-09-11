@@ -9,8 +9,9 @@ RUN apt-get update && \
     add-apt-repository universe
 
 RUN apt-get update && \
-    apt-get -y -q install wget lsb-release && \
-    wget -q http://aptSTABLE.ntop.org/VERSION/all/apt-ntopSTABLE.deb && \
+    apt-get -y -q install wget lsb-release apt-utils
+
+RUN wget -q http://aptSTABLE.ntop.org/VERSION/all/apt-ntopSTABLE.deb && \
     apt install -y ./apt-ntopSTABLE.deb && \
     rm -f apt-ntopSTABLE.deb
 
