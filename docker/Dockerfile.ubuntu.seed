@@ -4,6 +4,9 @@ MAINTAINER packager@ntop.org
 # Fix container detection on latest docker which creates /.dockerenv too late
 RUN touch /.dockerenv
 
+# Fix intermittent gpg connection failures
+RUN mkdir -p ~/.gnupg && echo "disable-ipv6" >> ~/.gnupg/dirmngr.conf
+
 RUN apt-get update && \
     apt-get -y -q install software-properties-common && \
     add-apt-repository universe
