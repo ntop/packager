@@ -160,11 +160,6 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         # INSTALLATION TEST
         # #################################################################################################################
 
-        if [[ "${IMG}" =~ "debianbookworm.stable".* ]]; then
-            # Skip bookworm stable packages for the time being
-            continue
-        fi
-
         if [[ "${IMG}" =~ "debianbullseye.".*"ntap".* ]] ||
            [[ "${IMG}" =~ "centos.".*"ntap".* ]] || 
            [[ "${IMG}" =~ "rockylinux.".*"ntap".* ]]; then
