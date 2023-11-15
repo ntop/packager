@@ -237,7 +237,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}.log ]]; then
                 echo "No log output during the BUILD phase" >  "${OUT}/${IMG}${STABLE_SUFFIX}.log"
             fi
-            sendError "Packages INSTALLATION failed on ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}.log"
+            sendError "Packages INSTALLATION failed on ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}.log" "2"
         else
             IMAGES="${IMAGES} ${IMG}"
 
@@ -255,7 +255,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                 if [[ ! -s  ${OUT}/${IMG}${STABLE_SUFFIX}_test.log ]]; then
                     echo "No log output during the TEST phase" > "${OUT}/${IMG}${STABLE_SUFFIX}_test.log"
                 fi
-                sendError "Packages TEST failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}_test.log"
+                sendError "Packages TEST failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}_test.log" "2"
             else
                 echo "OK"
             fi
