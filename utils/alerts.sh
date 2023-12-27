@@ -12,7 +12,7 @@ function sendAlert {
     # $1: A symbol, e.g., :checkered_flag: or :triangular_flag_on_post: that will be prepended to the message title
     # $2: A title of the message
     # $3: Body of the message [OPTIONAL]
-    # $4: A path to a file which will be send as body of the message. When $4 is defined, $3 is ignored. [OPTIONAL]
+    # $4: A path to a file which will be sent as body of the message. When $4 is defined, $3 is ignored. [OPTIONAL]
     # $5: Use the first N channels to send the message, out of those provided in DISCORD_WEBHOOK (Default: 1) [OPTIONAL]
     #
 
