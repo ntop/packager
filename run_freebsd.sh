@@ -168,6 +168,10 @@ function test_jail {
 	sendError "FreeBSD $2 nprobe package TEST failed" "Unable to TEST nprobe package" "$LOG_FILE" "2"
     fi
 
+    # Cleanup cached packages
+    pkg -j $1 autoremove -y
+    pkg -j $1 clean -a -y
+
     # Done, stop the jail
     service jail onestop $1
 }
