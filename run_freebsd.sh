@@ -103,8 +103,9 @@ exec.start="sh /etc/rc";
 exec.stop="sh /etc/rc.shutdown";
 
 # 7. specific jail configuration
-freebsd12_4 {}
-freebsd13_1 {}
+#freebsd12_4 {}
+freebsd13_2 {}
+freebsd14_0 {}
 EOF
 }
 
@@ -184,17 +185,20 @@ for i in "$@"
 do
     case $i in
 	-b|--bootstrap)
-	    cleanup "freebsd12_4"
-	    cleanup "freebsd13_1"
-	    bootstrap_release "freebsd12_4" "12.4-RELEASE"
-	    bootstrap_release "freebsd13_1" "13.1-RELEASE"
+	    #cleanup "freebsd12_4"
+	    cleanup "freebsd13_2"
+	    cleanup "freebsd14_0"
+	    #bootstrap_release "freebsd12_4" "12.4-RELEASE"
+	    bootstrap_release "freebsd13_2" "13.2-RELEASE"
+	    bootstrap_release "freebsd14_0" "14.0-RELEASE"
 	    bootstrap_jails
 	    exit 0
 	    ;;
 
 	-c|--cleanup)
-	    cleanup "freebsd12_4"
-	    cleanup "freebsd13_1"
+	    #cleanup "freebsd12_4"
+	    cleanup "freebsd13_2"
+	    cleanup "freebsd14_0"
 	    exit 0
 	    ;;
 
@@ -229,6 +233,7 @@ done
 #    echo "Warning: please specify -d=<discord webhook url> to send alerts to Discord"
 # fi
 
-test_jail "freebsd12_4" "12.4-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:12:amd64/latest/ntop-1.0.txz"
-test_jail "freebsd13_1" "13.1-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:13:amd64/latest/ntop-1.0.pkg"
+#test_jail "freebsd12_4" "12.4-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:12:amd64/latest/ntop-1.0.txz"
+test_jail "freebsd13_2" "13.2-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:13:amd64/latest/ntop-1.0.pkg"
+test_jail "freebsd14_0" "14.0-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:14:amd64/latest/ntop-1.0.pkg"
 
