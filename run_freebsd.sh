@@ -136,6 +136,8 @@ function test_jail {
     #e.g., https://packages.ntop.org/FreeBSD/FreeBSD:11:amd64/latest/ntop-1.0.txz
     pkg -j $1 add $3
 
+    jexec $1 /bin/freebsd-version
+
     # Install the packages
     pkg -j $1 install -y redis
     pkg -j $1 install -y ntopng
