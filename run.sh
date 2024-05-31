@@ -17,7 +17,7 @@ function usage {
     echo "Usage: run.sh [--cleanup] | [-m=stable] [-f=<mail from>] [-t=<mail to>] [-d=<discord webhook>] [-r=<release>] [-p=<package>]"
     echo ""
     echo "-m=<branch>                : Select branch."
-    echo "                             Available branches: (default: dev), stable."
+    echo "                             Available branches: dev (default), stable."
     echo "-r|--release=<release>     : Builds for a specific release. Optional, all releases are built when not specified."
     echo "                             Available releases: centos7, rockylinux8, rockylinux9, debianbuster (10), debianbullseye (11), debianbookworm (12), ubuntu18, ubuntu20, ubuntu22, ubuntu24."
     echo "-p|--package=<package>     : Builds a specific package. Optional, all packages are built when not specified."
@@ -160,6 +160,11 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         # #################################################################################################################
         # INSTALLATION TEST
         # #################################################################################################################
+
+        if [[ "${IMG}" =~ "ubuntu24.stable.".* ]]; then
+            # Skip stable for ubuntu24
+            continue
+        fi
 
         if [[ "${IMG}" =~ "debianbullseye.".*"ntap".* ]] ||
            [[ "${IMG}" =~ "centos.".*"ntap".* ]] || 
