@@ -194,8 +194,8 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             continue
         fi
 
-        if [ "$PACKAGES_LIST" = "nedge" ] && [[ ${IMG} != ubuntu20.* ]]; then
-            # nedge is supported on Ubuntu 20 only
+        if [ "$PACKAGES_LIST" = "nedge" ] && [[ ${IMG} != ubuntu20.* ]] && [[ ${IMG} != ubuntu24.development.* ]]; then
+	    # nedge is supported on Ubuntu 20 (stable, development) and 24 (development) only
             continue
         fi
 
