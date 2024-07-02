@@ -3,7 +3,7 @@
 MAIL_FROM=""
 MAIL_TO=""
 DISCORD_WEBHOOK=""
-RELEASE=""  # e.g., centos7, rockylinux8, rockylinux9, debianbuster, debianbullseye, debianbookworm, ubuntu18, ubuntu20, ubuntu22, ubuntu24
+RELEASE=""  # e.g., centos7, rockylinux8, rockylinux9, debianbuster, debianbullseye, debianbookworm, ubuntu20, ubuntu22, ubuntu24
 PACKAGE="" # e.g., cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring
 
 DOCKER="sudo docker"
@@ -19,7 +19,7 @@ function usage {
     echo "-m=<branch>                : Select branch."
     echo "                             Available branches: dev (default), stable."
     echo "-r|--release=<release>     : Builds for a specific release. Optional, all releases are built when not specified."
-    echo "                             Available releases: centos7, rockylinux8, rockylinux9, debianbuster (10), debianbullseye (11), debianbookworm (12), ubuntu18, ubuntu20, ubuntu22, ubuntu24."
+    echo "                             Available releases: centos7, rockylinux8, rockylinux9, debianbuster (10), debianbullseye (11), debianbookworm (12), ubuntu20, ubuntu22, ubuntu24."
     echo "-p|--package=<package>     : Builds a specific package. Optional, all packages are built when not specified."
     echo "                             Available packages: cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring."
     echo "-c|--cleanup               : clears all docker images and containers"
@@ -113,7 +113,6 @@ mkdir -p ${OUT}/generic
 # Producing Dockerfile(s)
 
 # Ubuntu
-sed -e "s:VERSION:18.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu18
 sed -e "s:VERSION:20.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu20
 sed -e "s:VERSION:22.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu22
 sed -e "s:VERSION:24.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu24
