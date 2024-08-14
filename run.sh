@@ -156,10 +156,10 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         # INSTALLATION TEST
         # #################################################################################################################
 
-        if [[ "${IMG}" =~ "ubuntu24.stable.".* ]]; then
-            # Skip stable for ubuntu24
-            continue
-        fi
+        #if [[ "${IMG}" =~ "ubuntu24.stable.".* ]]; then
+        #    # Skip stable for ubuntu24
+        #    continue
+        #fi
 
         if [[ "${IMG}" =~ "debianbullseye.".*"ntap".* ]] ||
            [[ "${IMG}" =~ "rockylinux.".*"ntap".* ]]; then
