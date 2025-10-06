@@ -3,7 +3,7 @@
 MAIL_FROM=""
 MAIL_TO=""
 DISCORD_WEBHOOK=""
-RELEASE=""  # e.g., rockylinux8, rockylinux9, debianbuster, debianbullseye, debianbookworm, ubuntu20, ubuntu22, ubuntu24
+RELEASE=""  # e.g., rockylinux8, rockylinux9, rockylinux10, debianbuster, debianbullseye, debianbookworm, debiantrixie, ubuntu20, ubuntu22, ubuntu24
 PACKAGE="" # e.g., cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring
 
 DOCKER="sudo docker"
@@ -19,7 +19,7 @@ function usage {
     echo "-m=<branch>                : Select branch."
     echo "                             Available branches: dev (default), stable."
     echo "-r|--release=<release>     : Builds for a specific release. Optional, all releases are built when not specified."
-    echo "                             Available releases: rockylinux8, rockylinux9, debianbuster (10), debianbullseye (11), debianbookworm (12), ubuntu20, ubuntu22, ubuntu24."
+    echo "                             Available releases: rockylinux8, rockylinux9, rockylinux10, debianbuster (10), debianbullseye (11), debianbookworm (12), debiantrixie (13) ubuntu20, ubuntu22, ubuntu24."
     echo "-p|--package=<package>     : Builds a specific package. Optional, all packages are built when not specified."
     echo "                             Available packages: cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring."
     echo "-c|--cleanup               : clears all docker images and containers"
@@ -122,10 +122,12 @@ sed -e "s:VERSION:24.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ub
 sed -e "s:VERSION:buster:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbuster
 sed -e "s:VERSION:bullseye:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbullseye
 sed -e "s:VERSION:bookworm:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbookworm
+sed -e "s:VERSION:trixie:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debiantrixie
 
 # Rocky Linux
-sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:8:g"        -e "s:CENTOS7:#:g" -e "s:CENTOS8:#:g" -e "s:ROCKYLINUX::g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:powertools:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux8
-sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:9:g"        -e "s:CENTOS7:#:g" -e "s:CENTOS8:#:g" -e "s:ROCKYLINUX::g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:crb:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux9
+sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:8:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:powertools:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux8
+sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:9:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:crb:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux9
+sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:10:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:crb:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux10
 
 INSTALLATION_FAILURES=0
 INSTALLATION_FAILED_IMAGES=""
@@ -167,11 +169,8 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             continue
         fi
 
-        if [ "rockylinux8.development.n2disk" == ${IMG} ] || 
-           [ "rockylinux8.stable.n2disk" == ${IMG} ] ||
-           [ "rockylinux9.development.n2disk" == ${IMG} ] || 
-           [ "rockylinux9.stable.n2disk" == ${IMG} ]; then
-            # Seems n2disk on centos8 attempts to install kernel-related stuff which is not supported on docker
+        if [[ "${IMG}" =~ "rockylinux".*".n2disk".* ]]; then
+            # Seems n2disk on RH attempts to install kernel-related stuff which is not supported on docker
             continue
         fi
 
