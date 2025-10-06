@@ -127,7 +127,7 @@ sed -e "s:VERSION:trixie:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile
 # Rocky Linux
 sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:8:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:powertools:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux8
 sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:9:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:crb:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux9
-sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:10:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:crb:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux10
+sed -e "s:DISTRIBUTION:rockylinux/rockylinux:g" -e "s:VERSION:10.0:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:crb:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux10
 
 INSTALLATION_FAILURES=0
 INSTALLATION_FAILED_IMAGES=""
@@ -158,10 +158,10 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         # INSTALLATION TEST
         # #################################################################################################################
 
-        #if [[ "${IMG}" =~ "ubuntu24.stable.".* ]]; then
-        #    # Skip stable for ubuntu24
-        #    continue
-        #fi
+        if [[ "${IMG}" =~ "rockylinux10.".* ]]; then
+	    # Skip rockylinux 10 as it requires CPU x86-64-v3
+            continue
+        fi
 
         if [[ "${IMG}" =~ "debianbullseye.".*"ntap".* ]] ||
            [[ "${IMG}" =~ "rockylinux.".*"ntap".* ]]; then
