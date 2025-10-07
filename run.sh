@@ -163,6 +163,11 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             continue
         fi
 
+        if [[ "${IMG}" =~ "debiantrixie.stable.".* ]]; then
+	    # Skip debiantrixie stable until stable packages are released
+            continue
+        fi
+
         if [[ "${IMG}" =~ "debianbullseye.".*"ntap".* ]] ||
            [[ "${IMG}" =~ "rockylinux.".*"ntap".* ]]; then
             # Skip ntap for distrubutions with no package
