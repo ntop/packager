@@ -5,7 +5,7 @@ MAINTAINER packager@ntop.org
 RUN touch /.dockerenv
 
 # Fix sources to point to the archive repositories (EOL)
-RUN sed -i 's|deb.debian.org|archive.debian.org|g' /etc/apt/sources.list
+RUN BUSTER sed -i 's|deb.debian.org|archive.debian.org|g' /etc/apt/sources.list
 
 # Fix intermittent gpg connection failures
 RUN mkdir -p ~/.gnupg && echo "disable-ipv6" >> ~/.gnupg/dirmngr.conf

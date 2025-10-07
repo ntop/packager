@@ -118,11 +118,10 @@ sed -e "s:VERSION:22.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ub
 sed -e "s:VERSION:24.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu24
 
 # Debian
-#sed -e "s:VERSION:stretch:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianstretch
-sed -e "s:VERSION:buster:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbuster
-sed -e "s:VERSION:bullseye:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbullseye
-sed -e "s:VERSION:bookworm:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbookworm
-sed -e "s:VERSION:trixie:g"   -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debiantrixie
+sed -e "s:VERSION:buster:g"   -e "s:BUSTER::g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbuster
+sed -e "s:VERSION:bullseye:g" -e "s:BUSTER:#:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbullseye
+sed -e "s:VERSION:bookworm:g" -e "s:BUSTER:#:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbookworm
+sed -e "s:VERSION:trixie:g"   -e "s:BUSTER:#:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debiantrixie
 
 # Rocky Linux
 sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:8:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:powertools:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux8
