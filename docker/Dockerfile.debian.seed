@@ -12,7 +12,7 @@ RUN mkdir -p ~/.gnupg && echo "disable-ipv6" >> ~/.gnupg/dirmngr.conf
 
 RUN apt-get update && \
     apt-get -y -q install wget gnupg lsb-release net-tools ethtool apt-utils && \
-    wget -q http://aptSTABLE.ntop.org/VERSION/all/apt-ntopSTABLE.deb && \
+    wget -q http://packages.ntop.org/aptSTABLE/VERSION/all/apt-ntopSTABLE.deb && \
     apt install -y ./apt-ntopSTABLE.deb && \
     rm -f apt-ntopSTABLE.deb
 

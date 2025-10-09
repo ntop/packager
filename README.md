@@ -5,7 +5,7 @@ This project contains some scripts that run some basic tests on binary packages 
 Tests are logically divided into installation tests and functional tests.
 
 # Installation tests
-During these tests a docker image is created for each supported architecture (presently ubuntu 12/14/16, debian jessie and wheezy, cento 6/7) and for each package (or group of packages) that is meant to be tested.
+During these tests a docker image is created for each supported architecture and for each package (or group of packages) that is meant to be tested.
 
 The bash scripts under the entrypoint/ directory are used to specify the packages to be tested. Each script can be thought of as a unit test. Inside each script there is the list of packages and the test logic that have to be executed.
 

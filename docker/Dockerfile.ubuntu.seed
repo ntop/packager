@@ -14,7 +14,7 @@ RUN apt-get update && \
 RUN apt-get update && \
     apt-get -y -q install wget lsb-release apt-utils
 
-RUN wget -q http://aptSTABLE.ntop.org/VERSION/all/apt-ntopSTABLE.deb && \
+RUN wget -q http://packages.ntop.org/aptSTABLE/VERSION/all/apt-ntopSTABLE.deb && \
     apt install -y ./apt-ntopSTABLE.deb && \
     rm -f apt-ntopSTABLE.deb
 
