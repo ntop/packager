@@ -162,11 +162,6 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             continue
         fi
 
-        if [[ "${IMG}" =~ "debiantrixie.stable.".* ]]; then
-	    # Skip debiantrixie stable until stable packages are released
-            continue
-        fi
-
         if [[ "${IMG}" =~ "debianbullseye.".*"ntap".* ]] ||
            [[ "${IMG}" =~ "rockylinux.".*"ntap".* ]]; then
             # Skip ntap for distrubutions with no package
@@ -174,7 +169,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         fi
 
         if [[ "${IMG}" =~ "rockylinux".*".n2disk".* ]]; then
-            # Seems n2disk on RH attempts to install kernel-related stuff which is not supported on docker
+            # Skip n2disk on RH as it attempts to install kernel-related stuff which is not supported on docker
             continue
         fi
 
