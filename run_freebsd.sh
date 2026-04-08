@@ -103,8 +103,8 @@ exec.start="sh /etc/rc";
 exec.stop="sh /etc/rc.shutdown";
 
 # 7. specific jail configuration
-freebsd13_3 {}
-freebsd14_1 {}
+freebsd14_4 {}
+freebsd15_0 {}
 EOF
 }
 
@@ -185,19 +185,22 @@ do
     case $i in
 	-b|--bootstrap)
 	    #cleanup "freebsd12_4"
-	    cleanup "freebsd13_3"
-	    cleanup "freebsd14_1"
+	    #cleanup "freebsd13_5"
+	    cleanup "freebsd14_4"
+	    cleanup "freebsd15_0"
 	    #bootstrap_release "freebsd12_4" "12.4-RELEASE"
-	    bootstrap_release "freebsd13_3" "13.3-RELEASE"
-	    bootstrap_release "freebsd14_1" "14.1-RELEASE"
+	    #bootstrap_release "freebsd13_5" "13.3-RELEASE"
+	    bootstrap_release "freebsd14_4" "14.4-RELEASE"
+	    bootstrap_release "freebsd15_0" "15.0-RELEASE"
 	    bootstrap_jails
 	    exit 0
 	    ;;
 
 	-c|--cleanup)
 	    #cleanup "freebsd12_4"
-	    cleanup "freebsd13_3"
-	    cleanup "freebsd14.1"
+	    #cleanup "freebsd13_5"
+	    cleanup "freebsd14.4"
+	    cleanup "freebsd15.0"
 	    exit 0
 	    ;;
 
@@ -233,6 +236,7 @@ done
 # fi
 
 #test_jail "freebsd12_4" "12.4-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:12:amd64/latest/ntop-1.0.txz"
-test_jail "freebsd13_3" "13.3-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:13:amd64/latest/ntop-1.0.pkg"
-test_jail "freebsd14_1" "14.1-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:14:amd64/latest/ntop-1.0.pkg"
+#test_jail "freebsd13_5" "13.5-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:13:amd64/latest/ntop-1.0.pkg"
+test_jail "freebsd14_4" "14.4-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:14:amd64/latest/ntop-1.0.pkg"
+test_jail "freebsd15_0" "15.0-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:15:amd64/latest/ntop-1.0.pkg"
 
