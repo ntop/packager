@@ -3,7 +3,7 @@
 MAIL_FROM=""
 MAIL_TO=""
 DISCORD_WEBHOOK=""
-RELEASE=""  # e.g., rockylinux8, rockylinux9, rockylinux10, debianbuster, debianbullseye, debianbookworm, debiantrixie, ubuntu20, ubuntu22, ubuntu24
+RELEASE=""  # e.g., rockylinux8, rockylinux9, rockylinux10, debianbuster, debianbullseye, debianbookworm, debiantrixie, ubuntu20, ubuntu22, ubuntu24, ubuntu26
 PACKAGE="" # e.g., cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring
 
 DOCKER="sudo docker"
@@ -19,7 +19,7 @@ function usage {
     echo "-m=<branch>                : Select branch."
     echo "                             Available branches: dev (default), stable."
     echo "-r|--release=<release>     : Builds for a specific release. Optional, all releases are built when not specified."
-    echo "                             Available releases: rockylinux8, rockylinux9, rockylinux10, debianbuster (10), debianbullseye (11), debianbookworm (12), debiantrixie (13) ubuntu20, ubuntu22, ubuntu24."
+    echo "                             Available releases: rockylinux8, rockylinux9, rockylinux10, debianbuster (10), debianbullseye (11), debianbookworm (12), debiantrixie (13) ubuntu20, ubuntu22, ubuntu24, ubuntu26."
     echo "-p|--package=<package>     : Builds a specific package. Optional, all packages are built when not specified."
     echo "                             Available packages: cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring."
     echo "-c|--cleanup               : clears all docker images and containers"
@@ -116,6 +116,7 @@ mkdir -p ${OUT}/generic
 sed -e "s:VERSION:20.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu20
 sed -e "s:VERSION:22.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu22
 sed -e "s:VERSION:24.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu24
+sed -e "s:VERSION:26.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu26
 
 # Debian
 sed -e "s:VERSION:buster:g"   -e "s:BUSTER::g"  -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debianbuster
@@ -134,7 +135,11 @@ INSTALLATION_FAILED_IMAGES=""
 FUNCTIONAL_FAILURES=0
 FUNCTIONAL_FAILED_IMAGES=""
 
+VERSION_FAILURES=0
+VERSION_FAILED_IMAGES=""
+
 IMAGES=""
+TESTS_RUN=0
 
 # Cleanup all containers/images
 cleanup
@@ -177,8 +182,8 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             continue
         fi
 
-        if [ "$PACKAGES_LIST" = "nedge" ] && [[ ${IMG} != ubuntu20.* ]] && [[ ${IMG} != ubuntu24.development.* ]]; then
-	    # nedge is supported on Ubuntu 20 (stable, development) and 24 (development) only
+        if [ "$PACKAGES_LIST" = "nedge" ] && [[ ${IMG} != ubuntu20.* ]] && [[ ${IMG} != ubuntu24.development.* ]] && [[ ${IMG} != ubuntu26.development.* ]]; then
+	    # nedge is supported on Ubuntu 20 (stable, development), 24, 16 (development) only
             continue
         fi
 
@@ -196,6 +201,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             fi
         fi
 
+        let TESTS_RUN=TESTS_RUN+1
         echo "Preparing docker image ${IMG} [packages: $PACKAGES_LIST] [entrypoint: $ENTRYPOINT]"
 
         sed -e "s:PACKAGES_LIST:${PACKAGES_LIST}:g" \
@@ -249,6 +255,26 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                 echo "OK"
             fi
 
+            # #################################################################################################################
+            # VERSION TEST (dev packages only): verify that the version string contains today's date (YYMMDD)
+            # #################################################################################################################
+
+            if [ "$TAG" = "development" ]; then
+                echo -n "Version check ${IMG}... "
+                ${DOCKER} run ${IMG} version-check &> ${OUT}/${IMG}_version.log
+                if [ $? != 0 ]; then
+                    echo "FAIL [see ${OUT}/${IMG}_version.log for more details]"
+                    let VERSION_FAILURES=VERSION_FAILURES+1
+                    VERSION_FAILED_IMAGES="${IMG} ${VERSION_FAILED_IMAGES}"
+                    if [[ ! -s ${OUT}/${IMG}_version.log ]]; then
+                        echo "No log output during the VERSION CHECK phase" > "${OUT}/${IMG}_version.log"
+                    fi
+                    sendError "Packages VERSION CHECK failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}_version.log" "2"
+                else
+                    echo "OK"
+                fi
+            fi
+
         fi
     done
 
@@ -256,6 +282,11 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
     cleanup
 
 done
+
+if [ "$TESTS_RUN" -eq "0" ]; then
+    sendError "${TAG} no tests were run" "No matching release/package combination found. Check -r and -p arguments." "" "2"
+    exit 1
+fi
 
 if [ "$INSTALLATION_FAILURES" -ne "0" ]; then
     sendError "${TAG} packages INSTALLATION failed on $INSTALLATION_FAILURES images" "Unable to build docker images: ${INSTALLATION_FAILED_IMAGES}" "" "2"
@@ -267,5 +298,13 @@ if [ "$FUNCTIONAL_FAILURES" -ne "0" ]; then
     sendError "${TAG} packages TEST failed on $FUNCTIONAL_FAILURES images" "Unable to TEST docker images: ${FUNCTIONAL_FAILED_IMAGES}" "" "2"
 else
     sendSuccess "${TAG} packages TEST completed successfully" "All docker images test correctly."
+fi
+
+if [ "$TAG" = "development" ]; then
+    if [ "$VERSION_FAILURES" -ne "0" ]; then
+        sendError "${TAG} packages VERSION CHECK failed on $VERSION_FAILURES images" "Version mismatch on: ${VERSION_FAILED_IMAGES}" "" "2"
+    else
+        sendSuccess "${TAG} packages VERSION CHECK completed successfully" "All docker images version check correctly."
+    fi
 fi
 

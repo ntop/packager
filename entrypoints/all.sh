@@ -9,6 +9,9 @@ set -e
 if [ "$1" = 'test' ]; then
     # do interesting test stuff here
     echo "<test to be decided>"
+elif [ "$1" = 'version-check' ]; then
+    # all.sh installs multiple packages; version checks are done per-package entrypoint
+    exit 0
 else
     # can use this to run the software in the background for example
     exec "$@"
