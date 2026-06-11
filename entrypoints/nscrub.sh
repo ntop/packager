@@ -12,7 +12,7 @@ elif [ "$1" = 'version-check' ]; then
     TODAY=$(date +%y%m%d)
     VERSION_OUTPUT=$(nscrub --version 2>&1)
     echo "$VERSION_OUTPUT"
-    if ! echo "$VERSION_OUTPUT" | grep -q "Version:.*\.$TODAY"; then
+    if ! echo "$VERSION_OUTPUT" | grep -qE "Version:.*\.$TODAY|v\.[0-9]+\.[0-9]+\.$TODAY"; then
         echo "Version check FAILED: expected date $TODAY in version string"
         exit 1
     fi
