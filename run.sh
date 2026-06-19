@@ -3,7 +3,7 @@
 MAIL_FROM=""
 MAIL_TO=""
 DISCORD_WEBHOOK=""
-RELEASE=""  # e.g., rockylinux8, rockylinux9, rockylinux10, debianbuster, debianbullseye, debianbookworm, debiantrixie, ubuntu20, ubuntu22, ubuntu24, ubuntu26
+RELEASE=""  # e.g., rockylinux8, rockylinux9, rockylinux10, debianbuster, debianbullseye, debianbookworm, debiantrixie, ubuntu22, ubuntu24, ubuntu26
 PACKAGE="" # e.g., cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring
 
 DOCKER="sudo docker"
@@ -19,7 +19,7 @@ function usage {
     echo "-m=<branch>                : Select branch."
     echo "                             Available branches: dev (default), stable."
     echo "-r|--release=<release>     : Builds for a specific release. Optional, all releases are built when not specified."
-    echo "                             Available releases: rockylinux8, rockylinux9, rockylinux10, debianbuster (10), debianbullseye (11), debianbookworm (12), debiantrixie (13) ubuntu20, ubuntu22, ubuntu24, ubuntu26."
+    echo "                             Available releases: rockylinux8, rockylinux9, rockylinux10, debianbuster (10), debianbullseye (11), debianbookworm (12), debiantrixie (13), ubuntu22, ubuntu24, ubuntu26."
     echo "-p|--package=<package>     : Builds a specific package. Optional, all packages are built when not specified."
     echo "                             Available packages: cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring."
     echo "-c|--cleanup               : clears all docker images and containers"
@@ -113,7 +113,6 @@ mkdir -p ${OUT}/generic
 # Producing Dockerfile(s)
 
 # Ubuntu
-sed -e "s:VERSION:20.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu20
 sed -e "s:VERSION:22.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu22
 sed -e "s:VERSION:24.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu24
 sed -e "s:VERSION:26.04:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.ubuntu.seed > ${OUT}/generic/Dockerfile.ubuntu26
@@ -182,7 +181,8 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             continue
         fi
 
-        if [ "$PACKAGES_LIST" = "nedge" ] && [[ ${IMG} != ubuntu20.* ]] && [[ ${IMG} != ubuntu24.development.* ]]; then
+        #if [ "$PACKAGES_LIST" = "nedge" ] && [[ ${IMG} != ubuntu24.* ]] && [[ ${IMG} != ubuntu26.development.* ]]; then
+        if [ "$PACKAGES_LIST" = "nedge" ] && [[ ${IMG} != ubuntu24.* ]]; then
 	    # nedge is supported on Ubuntu 20, 24 only
             continue
         fi
