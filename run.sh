@@ -9,6 +9,7 @@ PACKAGE="" # e.g., cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring
 DOCKER="sudo docker"
 TAG="development"
 STABLE_SUFFIX=""
+PRINT_VERSION=0
 
 # Paths of the license files on the host to be mounted in each container for testing the license.
 # Packages with no entry here will be skipped.
@@ -33,6 +34,8 @@ function usage {
     echo "-p|--package=<package>     : Builds a specific package. Optional, all packages are built when not specified."
     echo "                             Available packages: cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring."
     echo "-c|--cleanup               : clears all docker images and containers"
+    echo "-V|--print-version         : skips all tests; just builds each image and prints \`--version\` (incl. system ID)"
+    echo "                             via --net=host, so the system ID matches the host's"
     echo ""
     echo "This tool will build some empty docker containers where ntop packages"
     echo "will be installed. This tool will make some tests and report"
@@ -95,6 +98,10 @@ do
         -c|--cleanup)
             cleanup
             exit 0
+            ;;
+
+        -V|--print-version)
+            PRINT_VERSION=1
             ;;
 
         -h|--help)
@@ -249,6 +256,19 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         else
             IMAGES="${IMAGES} ${IMG}"
 
+            if [ "$PRINT_VERSION" -eq 1 ]; then
+                # #################################################################################################################
+                # PRINT VERSION: just print --version (version, system ID, etc.) and skip tests.
+                # Use --net=host so the system ID matches the host system ID.
+                # #################################################################################################################
+
+                echo "--- ${IMG} ---"
+                ${DOCKER} run --net=host --rm ${IMG} print-version
+                echo ""
+
+                continue
+            fi
+
             # #################################################################################################################
             # FUNCTIONAL TESTS
             # #################################################################################################################
@@ -327,6 +347,11 @@ if [ "$INSTALLATION_FAILURES" -ne "0" ]; then
     sendError "${TAG} packages INSTALLATION failed on $INSTALLATION_FAILURES images" "Unable to build docker images: ${INSTALLATION_FAILED_IMAGES}" "" "2"
 else
     sendSuccess "${TAG} packages INSTALLATION completed successfully" "All docker images built correctly."
+fi
+
+if [ "$PRINT_VERSION" -eq 1 ]; then
+    # No other test ran in this mode
+    exit 0
 fi
 
 if [ "$FUNCTIONAL_FAILURES" -ne "0" ]; then

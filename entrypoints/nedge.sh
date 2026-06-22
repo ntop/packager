@@ -26,6 +26,8 @@ elif [ "$1" = 'license-check' ]; then
         echo "License check FAILED: no license type reported"
         exit 1
     fi
+elif [ "$1" = 'print-version' ]; then
+    nedge --version
 else
     # can use this to run nedge in the background for example
     exec "$@"

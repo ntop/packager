@@ -14,6 +14,9 @@ elif [ "$1" = 'version-check' ]; then
 elif [ "$1" = 'license-check' ]; then
     # pfring ZC licenses are tied to a NIC MAC address, not testable in this generic container; skip
     exit 0
+elif [ "$1" = 'print-version' ]; then
+    # pfring has no single user-space binary with a versioned release string; skip
+    exit 0
 else
     # can use this to run ntopng in the background for example
     exec "$@"
