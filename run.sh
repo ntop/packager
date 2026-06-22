@@ -16,6 +16,7 @@ PRINT_VERSION=0
 declare -A LICENSE_FILES=(
     [ntopng]="/etc/ntopng.license"
     [nprobe]="/etc/nprobe.license"
+    [cento]="/etc/cento.license"
     [n2disk]="/etc/n2disk.license"
     [nscrub]="/etc/nscrub.license"
     [nedge]="/etc/nedge.license"
