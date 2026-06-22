@@ -10,6 +10,16 @@ DOCKER="sudo docker"
 TAG="development"
 STABLE_SUFFIX=""
 
+# Paths of the license files on the host to be mounted in each container for testing the license.
+# Packages with no entry here will be skipped.
+declare -A LICENSE_FILES=(
+    [ntopng]="/etc/ntopng.license"
+    [nprobe]="/etc/nprobe.license"
+    [n2disk]="/etc/n2disk.license"
+    [nscrub]="/etc/nscrub.license"
+    [nedge]="/etc/nedge.license"
+)
+
 # Import functions to send out alerts
 source utils/alerts.sh
 
@@ -137,6 +147,9 @@ FUNCTIONAL_FAILED_IMAGES=""
 VERSION_FAILURES=0
 VERSION_FAILED_IMAGES=""
 
+LICENSE_FAILURES=0
+LICENSE_FAILED_IMAGES=""
+
 IMAGES=""
 TESTS_RUN=0
 
@@ -256,6 +269,28 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             fi
 
             # #################################################################################################################
+            # LICENSE TEST: verify that the package reports a valid license once the host license file is
+            # mounted in the container (skipped when no license file is found for the package).
+            # #################################################################################################################
+
+            LICENSE_FILE="${LICENSE_FILES[$PACKAGES_LIST]}"
+            if [ -n "$LICENSE_FILE" ] && [ -f "$LICENSE_FILE" ]; then
+                echo -n "License check ${IMG}... "
+                ${DOCKER} run --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro ${IMG} license-check &> ${OUT}/${IMG}${STABLE_SUFFIX}_license.log
+                if [ $? != 0 ]; then
+                    echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_license.log for more details]"
+                    let LICENSE_FAILURES=LICENSE_FAILURES+1
+                    LICENSE_FAILED_IMAGES="${IMG} ${LICENSE_FAILED_IMAGES}"
+                    if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}_license.log ]]; then
+                        echo "No log output during the LICENSE CHECK phase" > "${OUT}/${IMG}${STABLE_SUFFIX}_license.log"
+                    fi
+                    sendError "Packages LICENSE CHECK failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}_license.log" "2"
+                else
+                    echo "OK"
+                fi
+            fi
+
+            # #################################################################################################################
             # VERSION TEST (dev packages only): verify that the version string contains today's date (YYMMDD)
             # #################################################################################################################
 
@@ -298,6 +333,12 @@ if [ "$FUNCTIONAL_FAILURES" -ne "0" ]; then
     sendError "${TAG} packages TEST failed on $FUNCTIONAL_FAILURES images" "Unable to TEST docker images: ${FUNCTIONAL_FAILED_IMAGES}" "" "2"
 else
     sendSuccess "${TAG} packages TEST completed successfully" "All docker images test correctly."
+fi
+
+if [ "$LICENSE_FAILURES" -ne "0" ]; then
+    sendError "${TAG} packages LICENSE CHECK failed on $LICENSE_FAILURES images" "License validation failed on: ${LICENSE_FAILED_IMAGES}" "" "2"
+else
+    sendSuccess "${TAG} packages LICENSE CHECK completed successfully" "All docker images report a valid license."
 fi
 
 if [ "$TAG" = "development" ]; then

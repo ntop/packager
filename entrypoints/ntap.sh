@@ -17,6 +17,17 @@ elif [ "$1" = 'version-check' ]; then
         echo "Version check FAILED: expected date $TODAY in version string"
         exit 1
     fi
+elif [ "$1" = 'license-check' ]; then
+    VERSION_OUTPUT=$(ntap_collector --version 2>&1)
+    echo "$VERSION_OUTPUT"
+    if echo "$VERSION_OUTPUT" | grep -qi "Invalid license\|License Type:.*Invalid"; then
+        echo "License check FAILED: invalid license detected"
+        exit 1
+    fi
+    if ! echo "$VERSION_OUTPUT" | grep -q "License Type:"; then
+        echo "License check FAILED: no license type reported"
+        exit 1
+    fi
 else
     # can use this to run ntap in the background for example
     exec "$@"

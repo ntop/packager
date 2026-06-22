@@ -12,6 +12,9 @@ if [ "$1" = 'test' ]; then
 elif [ "$1" = 'version-check' ]; then
     # all.sh installs multiple packages; version checks are done per-package entrypoint
     exit 0
+elif [ "$1" = 'license-check' ]; then
+    # all.sh installs multiple packages, license checks are done per-package entrypoint
+    exit 0
 else
     # can use this to run the software in the background for example
     exec "$@"
