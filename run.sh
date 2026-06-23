@@ -182,11 +182,6 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         # INSTALLATION TEST
         # #################################################################################################################
 
-        if [[ "${IMG}" =~ "rockylinux10.".* ]]; then
-	    # Skip rockylinux 10 as it requires CPU x86-64-v3
-            continue
-        fi
-
         if [[ "${IMG}" =~ "debianbullseye.".*"ntap".* ]] ||
            [[ "${IMG}" =~ "rockylinux.".*"ntap".* ]]; then
             # Skip ntap for distrubutions with no package
