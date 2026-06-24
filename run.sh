@@ -181,6 +181,11 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         # INSTALLATION TEST
         # #################################################################################################################
 
+        if [[ "${IMG}" =~ "ubuntu26.stable".* ]]; then
+            # Skip Ubuntu 26 for stable packages for the time being
+            continue
+        fi
+
         if [[ "${IMG}" =~ "debianbullseye.".*"ntap".* ]] ||
            [[ "${IMG}" =~ "rockylinux.".*"ntap".* ]]; then
             # Skip ntap for distrubutions with no package
