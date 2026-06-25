@@ -275,8 +275,10 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 
             echo -n "Testing ${IMG}... "
             ${DOCKER} run ${IMG} test &> ${OUT}/${IMG}${STABLE_SUFFIX}_test.log
+            FUNCTIONAL_TEST_FAILED=0
             if [ $? != 0 ]; then
                 echo "FAIL Failed to execute: ${DOCKER} run ${IMG} test [see ${OUT}/${IMG}${STABLE_SUFFIX}_test.log for more details]"
+                FUNCTIONAL_TEST_FAILED=1
                 let FUNCTIONAL_FAILURES=FUNCTIONAL_FAILURES+1
                 FUNCTIONAL_FAILED_IMAGES="${IMG} ${FUNCTIONAL_FAILED_IMAGES}"
                 # Sending mail with log
@@ -287,6 +289,8 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             else
                 echo "OK"
             fi
+
+            if [ "$FUNCTIONAL_TEST_FAILED" -eq 0 ]; then
 
             # #################################################################################################################
             # LICENSE TEST: verify that the package reports a valid license once the host license file is
@@ -331,6 +335,8 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                     echo "OK"
                 fi
             fi
+
+            fi # ! FUNCTIONAL_TEST_FAILED
 
         fi
     done
