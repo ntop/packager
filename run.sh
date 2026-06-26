@@ -382,3 +382,16 @@ if [ "$TAG" = "development" ]; then
     fi
 fi
 
+TOTAL_FAILURES=$((INSTALLATION_FAILURES + FUNCTIONAL_FAILURES + LICENSE_FAILURES + VERSION_FAILURES))
+if [ "$TOTAL_FAILURES" -ne "0" ]; then
+    FAILED_CHECKS=""
+    [ "$INSTALLATION_FAILURES" -ne "0" ] && FAILED_CHECKS="${FAILED_CHECKS}INSTALLATION(${INSTALLATION_FAILURES}) "
+    [ "$FUNCTIONAL_FAILURES" -ne "0" ]   && FAILED_CHECKS="${FAILED_CHECKS}TEST(${FUNCTIONAL_FAILURES}) "
+    [ "$LICENSE_FAILURES" -ne "0" ]      && FAILED_CHECKS="${FAILED_CHECKS}LICENSE(${LICENSE_FAILURES}) "
+    [ "$VERSION_FAILURES" -ne "0" ]      && FAILED_CHECKS="${FAILED_CHECKS}VERSION(${VERSION_FAILURES}) "
+    sendError "${TAG} packages OVERALL: ${TOTAL_FAILURES} failure(s)" "Failed checks: ${FAILED_CHECKS}" "" "2"
+    exit 1
+else
+    sendSuccess "${TAG} packages OVERALL: all checks passed" "All images passed installation, test, license, and version checks."
+fi
+
