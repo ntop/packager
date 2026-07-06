@@ -7,7 +7,7 @@ set -e
 
 if [ "$1" = 'test' ]; then
     # do interesting test stuff here
-    exec ntap_collector -h
+    ntap_collector -h
     exec ntap_remote -h
 elif [ "$1" = 'version-check' ]; then
     TODAY=$(date +%y%m%d)
