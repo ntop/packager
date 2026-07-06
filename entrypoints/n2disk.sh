@@ -7,10 +7,9 @@ set -e
 
 if [ "$1" = 'test' ]; then
     # do interesting test stuff here
-    exec pfcount   -h
-    exec n2disk    -h
-    exec n2disk10g -h
-    exec disk2n    -h
+    pfcount -h
+    disk2n -h
+    exec n2disk -h
 elif [ "$1" = 'version-check' ]; then
     TODAY=$(date +%y%m%d)
     VERSION_OUTPUT=$(n2disk --version 2>&1)

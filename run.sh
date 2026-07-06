@@ -10,6 +10,7 @@ DOCKER="sudo docker"
 TAG="development"
 STABLE_SUFFIX=""
 PRINT_VERSION=0
+VERBOSE=0
 
 # Paths of the license files on the host to be mounted in each container for testing the license.
 # Packages with no entry here will be skipped.
@@ -37,6 +38,7 @@ function usage {
     echo "-c|--cleanup               : clears all docker images and containers"
     echo "-V|--print-version         : skips all tests; just builds each image and prints \`--version\` (incl. system ID)"
     echo "                             via --net=host, so the system ID matches the host's"
+    echo "-v|--verbose               : print build/test output to the console (in addition to log files)"
     echo ""
     echo "This tool will build some empty docker containers where ntop packages"
     echo "will be installed. This tool will make some tests and report"
@@ -62,6 +64,21 @@ function cleanup {
 
     # Purge /var/lib/docker/overlay2/
     ${DOCKER} system prune -a -f
+}
+
+# Run a command and save output to log file
+# when VERBOSE is enabled output is also printed to the console
+function run_cmd_logged {
+    local logfile="$1"
+    shift
+
+    if [ "$VERBOSE" -eq 1 ]; then
+        "$@" 2>&1 | tee "${logfile}"
+        return ${PIPESTATUS[0]}
+    else
+        "$@" &> "${logfile}"
+        return $?
+    fi
 }
 
 #############
@@ -103,6 +120,10 @@ do
 
         -V|--print-version)
             PRINT_VERSION=1
+            ;;
+
+        -v|--verbose)
+            VERBOSE=1
             ;;
 
         -h|--help)
@@ -235,7 +256,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         do
             echo "Running ${DOCKER} build --no-cache -t ${IMG} -f ${DOCKERFILE} ."
 
-            ${DOCKER} build --no-cache -t ${IMG} -f ${DOCKERFILE} . &> ${OUT}/${IMG}${STABLE_SUFFIX}.log
+            run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}.log" ${DOCKER} build --no-cache -t ${IMG} -f ${DOCKERFILE} .
 
             if [ $? == 0 ]; then break; fi
 
@@ -274,7 +295,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             # #################################################################################################################
 
             echo -n "Testing ${IMG}... "
-            ${DOCKER} run ${IMG} test &> ${OUT}/${IMG}${STABLE_SUFFIX}_test.log
+            run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_test.log" ${DOCKER} run ${IMG} test
             FUNCTIONAL_TEST_FAILED=0
             if [ $? != 0 ]; then
                 echo "FAIL Failed to execute: ${DOCKER} run ${IMG} test [see ${OUT}/${IMG}${STABLE_SUFFIX}_test.log for more details]"
@@ -300,7 +321,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             LICENSE_FILE="${LICENSE_FILES[$PACKAGES_LIST]}"
             if [ -n "$LICENSE_FILE" ] && [ -f "$LICENSE_FILE" ]; then
                 echo -n "License check ${IMG}... "
-                ${DOCKER} run --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro ${IMG} license-check &> ${OUT}/${IMG}${STABLE_SUFFIX}_license.log
+                run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_license.log" ${DOCKER} run --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro ${IMG} license-check
                 if [ $? != 0 ]; then
                     echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_license.log for more details]"
                     echo "Reproduce with: ${DOCKER} run --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro ${IMG} license-check"
@@ -321,7 +342,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 
             if [ "$TAG" = "development" ]; then
                 echo -n "Version check ${IMG}... "
-                ${DOCKER} run ${IMG} version-check &> ${OUT}/${IMG}_version.log
+                run_cmd_logged "${OUT}/${IMG}_version.log" ${DOCKER} run ${IMG} version-check
                 if [ $? != 0 ]; then
                     echo "FAIL [see ${OUT}/${IMG}_version.log for more details]"
                     echo "Reproduce with: ${DOCKER} run ${IMG} version-check"
