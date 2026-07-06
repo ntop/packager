@@ -6,16 +6,15 @@
 set -e
 
 if [ "$1" = 'test' ]; then
-    # do interesting test stuff here
-    echo "<test to be decided>"
+    exec zcount -h
 elif [ "$1" = 'version-check' ]; then
-    # pfring has no single user-space binary with a versioned release string; skip
+    # Do not check release as library may have an older release date; skip
     exit 0
 elif [ "$1" = 'license-check' ]; then
     # pfring ZC licenses are tied to a NIC MAC address, not testable in this generic container; skip
     exit 0
 elif [ "$1" = 'print-version' ]; then
-    # pfring has no single user-space binary with a versioned release string; skip
+    # pfring has no binary printing version only; skip
     exit 0
 else
     # can use this to run ntopng in the background for example

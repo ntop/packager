@@ -6,8 +6,6 @@
 set -e
 
 if [ "$1" = 'test' ]; then
-    # do interesting test stuff here
-    pfcount -h
     disk2n -h
     exec n2disk -h
 elif [ "$1" = 'version-check' ]; then
