@@ -22,7 +22,7 @@ elif [ "$1" = 'license-check' ]; then
         echo "License check FAILED: invalid license detected"
         exit 1
     fi
-    if ! echo "$VERSION_OUTPUT" | grep -q "License Type:"; then
+    if ! echo "$VERSION_OUTPUT" | grep -q "License Type:\|Edition:"; then
         echo "License check FAILED: no license type reported"
         exit 1
     fi
