@@ -3,6 +3,7 @@
 MAIL_FROM=""
 MAIL_TO=""
 DISCORD_WEBHOOK=""
+SUMMARY_DISCORD_WEBHOOK=""
 RELEASE=""  # e.g., rockylinux8, rockylinux9, rockylinux10, debianbullseye, debianbookworm, debiantrixie, ubuntu22, ubuntu24, ubuntu26
 PACKAGE="" # e.g., cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring
 
@@ -27,18 +28,20 @@ declare -A LICENSE_FILES=(
 source utils/alerts.sh
 
 function usage {
-    echo "Usage: run.sh [--cleanup] | [-m=stable] [-f=<mail from>] [-t=<mail to>] [-d=<discord webhook>] [-r=<release>] [-p=<package>]"
+    echo "Usage: run.sh [--cleanup] | [-m=stable] [-f=<mail from>] [-t=<mail to>] [-d=<discord webhook>] [-s=<discord webhook>] [-r=<release>] [-p=<package>]"
     echo ""
-    echo "-m=<branch>                : Select branch."
-    echo "                             Available branches: dev (default), stable."
-    echo "-r|--release=<release>     : Builds for a specific release. Optional, all releases are built when not specified."
-    echo "                             Available releases: rockylinux8, rockylinux9, rockylinux10, debianbullseye (11), debianbookworm (12), debiantrixie (13), ubuntu22, ubuntu24, ubuntu26."
-    echo "-p|--package=<package>     : Builds a specific package. Optional, all packages are built when not specified."
-    echo "                             Available packages: cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring."
-    echo "-c|--cleanup               : clears all docker images and containers"
-    echo "-V|--print-version         : skips all tests; just builds each image and prints \`--version\` (incl. system ID)"
-    echo "                             via --net=host, so the system ID matches the host's"
-    echo "-v|--verbose               : print build/test output to the console (in addition to log files)"
+    echo "-m=<branch>                        : Select branch."
+    echo "                                     Available branches: dev (default), stable."
+    echo "-r|--release=<release>             : Build for a specific release. Optional, all releases are built when not specified."
+    echo "                                     Available releases: rockylinux8, rockylinux9, rockylinux10, debianbullseye (11), debianbookworm (12), debiantrixie (13), ubuntu22, ubuntu24, ubuntu26."
+    echo "-p|--package=<package>             : Build a specific package. Optional, all packages are built when not specified."
+    echo "                                     Available packages: cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring."
+    echo "-d|--discord-webhook=<url>         : Discord webhook used for per-test and overall result alerts."
+    echo "-s|--discord-summary-webhook=<url> : Secondary Discord webhook for summary message (on failures only)."
+    echo "-c|--cleanup                       : Clear all docker images and containers"
+    echo "-V|--print-version                 : Skip all tests; just builds each image and prints \`--version\` (incl. system ID)"
+    echo "                                     via --net=host, so the system ID matches the host's"
+    echo "-v|--verbose                       : Print build/test output to the console (in addition to log files)"
     echo ""
     echo "This tool will build some empty docker containers where ntop packages"
     echo "will be installed. This tool will make some tests and report"
@@ -103,6 +106,10 @@ do
 
         -d=*|--discord-webhook=*)
             DISCORD_WEBHOOK="${i#*=}"
+            ;;
+
+        -s=*|--summary-webhook=*)
+            SUMMARY_DISCORD_WEBHOOK="${i#*=}"
             ;;
 
         -r=*|--release=*)
@@ -411,6 +418,7 @@ if [ "$TOTAL_FAILURES" -ne "0" ]; then
     [ "$LICENSE_FAILURES" -ne "0" ]      && FAILED_CHECKS="${FAILED_CHECKS}LICENSE(${LICENSE_FAILURES}) "
     [ "$VERSION_FAILURES" -ne "0" ]      && FAILED_CHECKS="${FAILED_CHECKS}VERSION(${VERSION_FAILURES}) "
     sendError "${TAG} packages OVERALL: ${TOTAL_FAILURES} failure(s)" "Failed checks: ${FAILED_CHECKS}" "" "2"
+    sendDiscordTo "$SUMMARY_DISCORD_WEBHOOK" "${TAG} packages OVERALL: ${TOTAL_FAILURES} failure(s)" "Failed checks: ${FAILED_CHECKS}"
     exit 1
 else
     sendSuccess "${TAG} packages OVERALL: all checks passed" "All images passed installation, test, license, and version checks."

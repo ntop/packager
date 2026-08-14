@@ -5,17 +5,14 @@ UTILS_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 DISCORD_SH="${UTILS_DIR}/discord.sh"
 
 # Send an alert
+#
+# Parameters:
+# $1: A symbol, e.g., :checkered_flag: or :triangular_flag_on_post: that will be prepended to the message title
+# $2: A title of the message
+# $3: Body of the message [OPTIONAL]
+# $4: A path to a file which will be sent as body of the message. When $4 is defined, $3 is ignored. [OPTIONAL]
+# $5: Use the first N channels to send the message, out of those provided in DISCORD_WEBHOOK (Default: 1) [OPTIONAL]
 function sendAlert {
-    #
-    # Parameters:
-    #
-    # $1: A symbol, e.g., :checkered_flag: or :triangular_flag_on_post: that will be prepended to the message title
-    # $2: A title of the message
-    # $3: Body of the message [OPTIONAL]
-    # $4: A path to a file which will be sent as body of the message. When $4 is defined, $3 is ignored. [OPTIONAL]
-    # $5: Use the first N channels to send the message, out of those provided in DISCORD_WEBHOOK (Default: 1) [OPTIONAL]
-    #
-
     NUM_CHANNELS="1"
     if [ -n "$5" ] ; then
         NUM_CHANNELS="$5"
@@ -64,4 +61,18 @@ function sendSuccess {
 # Send an error alert
 function sendError {
     sendAlert ":triangular_flag_on_post:" "$1" "$2" "$3" "$4"
+}
+
+# Send an alert to a specific Discord webhook, bypassing the global
+# DISCORD_WEBHOOK/mail settings and the multi-channel broadcast logic.
+# Used for the secondary "failures summary" channel.
+#
+# Parameters:
+# $1: Discord webhook URL
+# $2: Title
+# $3: Message (optional)
+function sendDiscordTo {
+    [ -z "$1" ] && return
+
+    "${DISCORD_SH}" --webhook-url "$1" --title ":triangular_flag_on_post: $2" --text "$3"
 }
