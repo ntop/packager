@@ -331,7 +331,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                 run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_license.log" ${DOCKER} run --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro ${IMG} license-check
                 if [ $? != 0 ]; then
                     echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_license.log for more details]"
-                    echo "Reproduce with: ${DOCKER} run --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro ${IMG} license-check"
+                    echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro ${IMG} license-check"
                     let LICENSE_FAILURES=LICENSE_FAILURES+1
                     LICENSE_FAILED_IMAGES="${IMG} ${LICENSE_FAILED_IMAGES}"
                     if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}_license.log ]]; then
@@ -352,7 +352,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                 run_cmd_logged "${OUT}/${IMG}_version.log" ${DOCKER} run ${IMG} version-check
                 if [ $? != 0 ]; then
                     echo "FAIL [see ${OUT}/${IMG}_version.log for more details]"
-                    echo "Reproduce with: ${DOCKER} run ${IMG} version-check"
+                    echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run ${IMG} version-check"
                     let VERSION_FAILURES=VERSION_FAILURES+1
                     VERSION_FAILED_IMAGES="${IMG} ${VERSION_FAILED_IMAGES}"
                     if [[ ! -s ${OUT}/${IMG}_version.log ]]; then
