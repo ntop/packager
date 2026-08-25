@@ -15,6 +15,9 @@ elif [ "$1" = 'version-check' ]; then
 elif [ "$1" = 'license-check' ]; then
     # all.sh installs multiple packages, license checks are done per-package entrypoint
     exit 0
+elif [ "$1" = 'license-mgr-check' ]; then
+    # license manager checks are done per-package entrypoint, and for selected packages
+    exit 0
 elif [ "$1" = 'print-version' ]; then
     # all.sh installs multiple packages, printing one of them (ntopng), use the exact image to print the required version
     ntopng --version || true

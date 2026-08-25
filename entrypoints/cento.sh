@@ -27,6 +27,18 @@ elif [ "$1" = 'license-check' ]; then
         echo "License check FAILED: no license type reported"
         exit 1
     fi
+elif [ "$1" = 'license-mgr-check' ]; then
+    LICENSE_MGR_CONF="/usr/share/ntop/etc/license-manager-client-cento.conf"
+    VERSION_OUTPUT=$(cento --license-mgr "$LICENSE_MGR_CONF" --version 2>&1)
+    echo "$VERSION_OUTPUT"
+    if echo "$VERSION_OUTPUT" | grep -qi "Invalid license\|License Type:.*Invalid"; then
+        echo "License manager check FAILED: invalid license detected"
+        exit 1
+    fi
+    if ! echo "$VERSION_OUTPUT" | grep -q "License Type:\|Edition:"; then
+        echo "License manager check FAILED: no license type reported"
+        exit 1
+    fi
 elif [ "$1" = 'print-version' ]; then
     cento --version
 elif [ "$1" = 'pcap-test' ]; then

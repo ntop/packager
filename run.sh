@@ -185,6 +185,9 @@ VERSION_FAILED_IMAGES=""
 LICENSE_FAILURES=0
 LICENSE_FAILED_IMAGES=""
 
+LICENSE_MGR_FAILURES=0
+LICENSE_MGR_FAILED_IMAGES=""
+
 PCAP_FAILURES=0
 PCAP_FAILED_IMAGES=""
 
@@ -348,6 +351,34 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             fi
 
             # #################################################################################################################
+            # LICENSE MANAGER TEST: verify that the package reports a valid license once the host License Manager
+            # client configuration file is mounted in the container (skipped when no config file is found on the host).
+            # #################################################################################################################
+
+            case "$PACKAGES_LIST" in
+                ntopng|nprobe|cento|n2disk)
+                    LICENSE_MGR_FILE="/usr/share/ntop/etc/license-manager-client-${PACKAGES_LIST}.conf"
+                    if [ -f "$LICENSE_MGR_FILE" ]; then
+                        echo -n "License manager check ${IMG}... "
+                        run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log" ${DOCKER} run --net=host -v ${LICENSE_MGR_FILE}:${LICENSE_MGR_FILE}:ro ${IMG} license-mgr-check
+                        if [ $? != 0 ]; then
+                            echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log for more details]"
+                            echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run --net=host -v ${LICENSE_MGR_FILE}:${LICENSE_MGR_FILE}:ro ${IMG} license-mgr-check"
+                            echo "or log into the container with: docker run --rm -it --entrypoint /bin/bash ${IMG}"
+                            let LICENSE_MGR_FAILURES=LICENSE_MGR_FAILURES+1
+                            LICENSE_MGR_FAILED_IMAGES="${IMG} ${LICENSE_MGR_FAILED_IMAGES}"
+                            if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log ]]; then
+                                echo "No log output during the LICENSE MANAGER CHECK phase" > "${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log"
+                            fi
+                            sendError "Packages LICENSE MANAGER CHECK failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log" "2"
+                        else
+                            echo "OK"
+                        fi
+                    fi
+                    ;;
+            esac
+
+            # #################################################################################################################
             # PCAP TEST: run the binary with a pcap file and check the exit status
             # #################################################################################################################
 
@@ -437,6 +468,12 @@ else
     sendSuccess "${TAG} packages LICENSE CHECK completed successfully" "All docker images report a valid license."
 fi
 
+if [ "$LICENSE_MGR_FAILURES" -ne "0" ]; then
+    sendError "${TAG} packages LICENSE MANAGER CHECK failed on $LICENSE_MGR_FAILURES images" "License Manager validation failed on: ${LICENSE_MGR_FAILED_IMAGES}" "" "2"
+else
+    sendSuccess "${TAG} packages LICENSE MANAGER CHECK completed successfully" "All docker images report a valid License Manager license."
+fi
+
 if [ "$PCAP_FAILURES" -ne "0" ]; then
     sendError "${TAG} packages PCAP TEST failed on $PCAP_FAILURES images" "Unable to process the test pcap file on: ${PCAP_FAILED_IMAGES}" "" "2"
 else
@@ -451,12 +488,13 @@ if [ "$TAG" = "development" ]; then
     fi
 fi
 
-TOTAL_FAILURES=$((INSTALLATION_FAILURES + FUNCTIONAL_FAILURES + LICENSE_FAILURES + PCAP_FAILURES + VERSION_FAILURES))
+TOTAL_FAILURES=$((INSTALLATION_FAILURES + FUNCTIONAL_FAILURES + LICENSE_FAILURES + LICENSE_MGR_FAILURES + PCAP_FAILURES + VERSION_FAILURES))
 if [ "$TOTAL_FAILURES" -ne "0" ]; then
     FAILED_CHECKS=""
     [ "$INSTALLATION_FAILURES" -ne "0" ] && FAILED_CHECKS="${FAILED_CHECKS}INSTALLATION(${INSTALLATION_FAILURES}) "
     [ "$FUNCTIONAL_FAILURES" -ne "0" ]   && FAILED_CHECKS="${FAILED_CHECKS}TEST(${FUNCTIONAL_FAILURES}) "
     [ "$LICENSE_FAILURES" -ne "0" ]      && FAILED_CHECKS="${FAILED_CHECKS}LICENSE(${LICENSE_FAILURES}) "
+    [ "$LICENSE_MGR_FAILURES" -ne "0" ]  && FAILED_CHECKS="${FAILED_CHECKS}LICENSE_MGR(${LICENSE_MGR_FAILURES}) "
     [ "$PCAP_FAILURES" -ne "0" ]         && FAILED_CHECKS="${FAILED_CHECKS}PCAP(${PCAP_FAILURES}) "
     [ "$VERSION_FAILURES" -ne "0" ]      && FAILED_CHECKS="${FAILED_CHECKS}VERSION(${VERSION_FAILURES}) "
     sendError "${TAG} packages OVERALL: ${TOTAL_FAILURES} failure(s)" "Failed checks: ${FAILED_CHECKS}" "" "2"
