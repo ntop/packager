@@ -29,6 +29,11 @@ elif [ "$1" = 'license-check' ]; then
     fi
 elif [ "$1" = 'print-version' ]; then
     nprobe --version
+elif [ "$1" = 'pcap-test' ]; then
+    PCAP_URL="https://raw.githubusercontent.com/ntop/ntopng-e2e-tests/dev/rest/pcap/web_attack_01.pcap"
+    PCAP_FILE="/tmp/pcap-test.pcap"
+    wget -q "$PCAP_URL" -O "$PCAP_FILE" || { echo "Failed to download pcap file"; exit 1; }
+    exec nprobe -i "$PCAP_FILE" -n none
 else
     # can use this to run ntopng in the background for example
     exec "$@"

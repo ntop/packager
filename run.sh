@@ -185,6 +185,9 @@ VERSION_FAILED_IMAGES=""
 LICENSE_FAILURES=0
 LICENSE_FAILED_IMAGES=""
 
+PCAP_FAILURES=0
+PCAP_FAILED_IMAGES=""
+
 IMAGES=""
 TESTS_RUN=0
 
@@ -345,6 +348,36 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             fi
 
             # #################################################################################################################
+            # PCAP TEST: run the binary with a pcap file and check the exit status
+            # #################################################################################################################
+
+            case "$PACKAGES_LIST" in
+                ntopng|nprobe|cento)
+                    PCAP_TEST_ARGS=""
+                    LICENSE_FILE="${LICENSE_FILES[$PACKAGES_LIST]}"
+                    if [ -n "$LICENSE_FILE" ] && [ -f "$LICENSE_FILE" ]; then
+                        PCAP_TEST_ARGS="-v ${LICENSE_FILE}:${LICENSE_FILE}:ro"
+                    fi
+
+                    echo -n "Pcap check ${IMG}... "
+                    run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_pcap.log" ${DOCKER} run --net=host ${PCAP_TEST_ARGS} ${IMG} pcap-test
+                    if [ $? != 0 ]; then
+                        echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_pcap.log for more details]"
+                        echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run --net=host ${PCAP_TEST_ARGS} ${IMG} pcap-test"
+                        echo "or log into the container with: docker run --rm -it --entrypoint /bin/bash ${IMG}"
+                        let PCAP_FAILURES=PCAP_FAILURES+1
+                        PCAP_FAILED_IMAGES="${IMG} ${PCAP_FAILED_IMAGES}"
+                        if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}_pcap.log ]]; then
+                            echo "No log output during the PCAP TEST phase" > "${OUT}/${IMG}${STABLE_SUFFIX}_pcap.log"
+                        fi
+                        sendError "Packages PCAP TEST failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}_pcap.log" "2"
+                    else
+                        echo "OK"
+                    fi
+                    ;;
+            esac
+
+            # #################################################################################################################
             # VERSION TEST (dev packages only): verify that the version string contains today's date (YYMMDD)
             # #################################################################################################################
 
@@ -404,6 +437,12 @@ else
     sendSuccess "${TAG} packages LICENSE CHECK completed successfully" "All docker images report a valid license."
 fi
 
+if [ "$PCAP_FAILURES" -ne "0" ]; then
+    sendError "${TAG} packages PCAP TEST failed on $PCAP_FAILURES images" "Unable to process the test pcap file on: ${PCAP_FAILED_IMAGES}" "" "2"
+else
+    sendSuccess "${TAG} packages PCAP TEST completed successfully" "All applicable docker images processed the test pcap file correctly."
+fi
+
 if [ "$TAG" = "development" ]; then
     if [ "$VERSION_FAILURES" -ne "0" ]; then
         sendError "${TAG} packages VERSION CHECK failed on $VERSION_FAILURES images" "Version mismatch on: ${VERSION_FAILED_IMAGES}" "" "2"
@@ -412,12 +451,13 @@ if [ "$TAG" = "development" ]; then
     fi
 fi
 
-TOTAL_FAILURES=$((INSTALLATION_FAILURES + FUNCTIONAL_FAILURES + LICENSE_FAILURES + VERSION_FAILURES))
+TOTAL_FAILURES=$((INSTALLATION_FAILURES + FUNCTIONAL_FAILURES + LICENSE_FAILURES + PCAP_FAILURES + VERSION_FAILURES))
 if [ "$TOTAL_FAILURES" -ne "0" ]; then
     FAILED_CHECKS=""
     [ "$INSTALLATION_FAILURES" -ne "0" ] && FAILED_CHECKS="${FAILED_CHECKS}INSTALLATION(${INSTALLATION_FAILURES}) "
     [ "$FUNCTIONAL_FAILURES" -ne "0" ]   && FAILED_CHECKS="${FAILED_CHECKS}TEST(${FUNCTIONAL_FAILURES}) "
     [ "$LICENSE_FAILURES" -ne "0" ]      && FAILED_CHECKS="${FAILED_CHECKS}LICENSE(${LICENSE_FAILURES}) "
+    [ "$PCAP_FAILURES" -ne "0" ]         && FAILED_CHECKS="${FAILED_CHECKS}PCAP(${PCAP_FAILURES}) "
     [ "$VERSION_FAILURES" -ne "0" ]      && FAILED_CHECKS="${FAILED_CHECKS}VERSION(${VERSION_FAILURES}) "
     sendError "${TAG} packages OVERALL: ${TOTAL_FAILURES} failure(s)" "Failed checks: ${FAILED_CHECKS}" "" "2"
     sendDiscordTo "$SUMMARY_DISCORD_WEBHOOK" "${TAG} packages OVERALL: ${TOTAL_FAILURES} failure(s)" "Failed checks: ${FAILED_CHECKS}"

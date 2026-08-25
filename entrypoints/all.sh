@@ -18,6 +18,9 @@ elif [ "$1" = 'license-check' ]; then
 elif [ "$1" = 'print-version' ]; then
     # all.sh installs multiple packages, printing one of them (ntopng), use the exact image to print the required version
     ntopng --version || true
+elif [ "$1" = 'pcap-test' ]; then
+    # pcap tests are executed on per-package entrypoints only
+    exit 0
 else
     # can use this to run the software in the background for example
     exec "$@"
