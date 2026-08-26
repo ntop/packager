@@ -169,9 +169,9 @@ sed -e "s:VERSION:bookworm:g" -e "s:BUSTER:#:g" -e "s:STABLE:${STABLE_SUFFIX}:g"
 sed -e "s:VERSION:trixie:g"   -e "s:BUSTER:#:g" -e "s:STABLE:${STABLE_SUFFIX}:g" docker/Dockerfile.debian.seed > ${OUT}/generic/Dockerfile.debiantrixie
 
 # Rocky Linux
-sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:8:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:powertools:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux8
-sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:9:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:crb:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux9
-sed -e "s:DISTRIBUTION:rockylinux/rockylinux:g" -e "s:VERSION:10.0:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:crb:g" docker/Dockerfile.centos.seed > ${OUT}/generic/Dockerfile.rockylinux10
+sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:8:g"  -e "s:MAJORVERSION:8:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:powertools:g" docker/Dockerfile.rockylinux.seed > ${OUT}/generic/Dockerfile.rockylinux8
+sed -e "s:DISTRIBUTION:rockylinux:g" -e "s:VERSION:9:g"  -e "s:MAJORVERSION:9:g"  -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:crb:g" docker/Dockerfile.rockylinux.seed > ${OUT}/generic/Dockerfile.rockylinux9
+sed -e "s:DISTRIBUTION:rockylinux/rockylinux:g" -e "s:VERSION:10.0:g" -e "s:MAJORVERSION:10:g" -e "s:STABLE:${STABLE_SUFFIX}:g" -e "s:POWERTOOLS:crb:g" docker/Dockerfile.rockylinux.seed > ${OUT}/generic/Dockerfile.rockylinux10
 
 INSTALLATION_FAILURES=0
 INSTALLATION_FAILED_IMAGES=""
