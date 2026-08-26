@@ -104,7 +104,7 @@ exec.stop="sh /etc/rc.shutdown";
 
 # 7. specific jail configuration
 freebsd14_4 {}
-freebsd15_0 {}
+freebsd15_1 {}
 EOF
 }
 
@@ -187,11 +187,11 @@ do
 	    #cleanup "freebsd12_4"
 	    #cleanup "freebsd13_5"
 	    cleanup "freebsd14_4"
-	    cleanup "freebsd15_0"
+	    cleanup "freebsd15_1"
 	    #bootstrap_release "freebsd12_4" "12.4-RELEASE"
 	    #bootstrap_release "freebsd13_5" "13.3-RELEASE"
 	    bootstrap_release "freebsd14_4" "14.4-RELEASE"
-	    bootstrap_release "freebsd15_0" "15.0-RELEASE"
+	    bootstrap_release "freebsd15_1" "15.1-RELEASE"
 	    bootstrap_jails
 	    exit 0
 	    ;;
@@ -200,7 +200,7 @@ do
 	    #cleanup "freebsd12_4"
 	    #cleanup "freebsd13_5"
 	    cleanup "freebsd14.4"
-	    cleanup "freebsd15.0"
+	    cleanup "freebsd15.1"
 	    exit 0
 	    ;;
 
@@ -238,5 +238,5 @@ done
 #test_jail "freebsd12_4" "12.4-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:12:amd64/latest/ntop-1.0.txz"
 #test_jail "freebsd13_5" "13.5-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:13:amd64/latest/ntop-1.0.pkg"
 test_jail "freebsd14_4" "14.4-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:14:amd64/latest/ntop-1.0.pkg"
-test_jail "freebsd15_0" "15.0-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:15:amd64/latest/ntop-1.0.pkg"
+test_jail "freebsd15_1" "15.1-RELEASE" "https://packages.ntop.org/FreeBSD/FreeBSD:15:amd64/latest/ntop-1.0.pkg"
 
