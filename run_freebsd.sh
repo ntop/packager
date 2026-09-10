@@ -134,40 +134,53 @@ function test_jail {
 
     # Install the ntop repo
     #e.g., https://packages.ntop.org/FreeBSD/FreeBSD:11:amd64/latest/ntop-1.0.txz
-    pkg -j $1 add $3
+    if ! pkg -j $1 add $3; then
+	sendError "FreeBSD $2 ntop repository ADD failed" "Unable to add the ntop pkg repository from $3 (repo bootstrap package missing or unreachable upstream). Skipping package tests for this release." "" "2"
+	service jail onestop $1
+	return 1
+    fi
 
     jexec $1 /bin/freebsd-version
 
     # Install the packages
     pkg -j $1 install -y redis
-    pkg -j $1 install -y ntopng
-    pkg -j $1 install -y nprobe
 
     # Enable the services
     sysrc -j $1 redis_enable="YES"
-    sysrc -j $1 ntopng_enable="YES"
-    sysrc -j $1 nprobe_enable="YES"
 
     # Start jailed redis
     jexec $1 service redis start
 
-    # Test the products
-    jexec $1 /usr/local/bin/bash -c "ntopng --version"
-    if jexec $1 /usr/local/bin/bash -c "ntopng -h"; then
-	sendSuccess "FreeBSD $2 ntopng package TEST completed successfully" "All tests run correctly."
+    if pkg -j $1 install -y ntopng; then
+	sysrc -j $1 ntopng_enable="YES"
+
+	# Test the product
+	jexec $1 /usr/local/bin/bash -c "ntopng --version"
+	if jexec $1 /usr/local/bin/bash -c "ntopng -h"; then
+	    sendSuccess "FreeBSD $2 ntopng package TEST completed successfully" "All tests run correctly."
+	else
+	    LOG_FILE="${OUT}/ntopng-${1}.log"
+	    jexec $1 /usr/local/bin/bash -c "ntopng -h" &> "${LOG_FILE}"
+	    sendError "FreeBSD $2 ntopng package TEST failed" "Unable to TEST ntopng package" "${LOG_FILE}" "2"
+	fi
     else
-	LOG_FILE="${OUT}/ntopng-${1}.log"
-        jexec $1 /usr/local/bin/bash -c "ntopng -h" &> "${LOG_FILE}"
-	sendError "FreeBSD $2 ntopng package TEST failed" "Unable to TEST ntopng package" "${LOG_FILE}" "2"
+	sendError "FreeBSD $2 ntopng package INSTALL failed" "pkg install ntopng failed: package not available in the ntop repository for this release" "" "2"
     fi
 
-    jexec $1 /usr/local/bin/bash -c "nprobe --version"
-    if jexec $1 /usr/local/bin/bash -c "nprobe -h"; then
-	sendSuccess "FreeBSD $2 nprobe package TEST completed successfully" "All tests run correctly."
+    if pkg -j $1 install -y nprobe; then
+	sysrc -j $1 nprobe_enable="YES"
+
+	# Test the product
+	jexec $1 /usr/local/bin/bash -c "nprobe --version"
+	if jexec $1 /usr/local/bin/bash -c "nprobe -h"; then
+	    sendSuccess "FreeBSD $2 nprobe package TEST completed successfully" "All tests run correctly."
+	else
+	    LOG_FILE="${OUT}/nprobe-${1}.log"
+	    jexec $1 /usr/local/bin/bash -c "nprobe -h" &> "${LOG_FILE}"
+	    sendError "FreeBSD $2 nprobe package TEST failed" "Unable to TEST nprobe package" "$LOG_FILE" "2"
+	fi
     else
-	LOG_FILE="${OUT}/nprobe-${1}.log"
-        jexec $1 /usr/local/bin/bash -c "nprobe -h" &> "${LOG_FILE}"
-	sendError "FreeBSD $2 nprobe package TEST failed" "Unable to TEST nprobe package" "$LOG_FILE" "2"
+	sendError "FreeBSD $2 nprobe package INSTALL failed" "pkg install nprobe failed: package not available in the ntop repository for this release" "" "2"
     fi
 
     # Cleanup cached packages
