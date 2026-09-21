@@ -47,6 +47,14 @@ elif [ "$1" = 'pcap-test' ]; then
     redis-server --daemonize yes
     mkdir -p /tmp/ntopng-pcap-test
     exec ntopng -i "$PCAP_FILE" --shutdown-when-done -d /tmp/ntopng-pcap-test -w 0
+elif [ "$1" = 'pcap-test-license-mgr' ]; then
+    PCAP_URL="https://raw.githubusercontent.com/ntop/ntopng-e2e-tests/dev/rest/pcap/web_attack_01.pcap"
+    PCAP_FILE="/tmp/pcap-test.pcap"
+    wget -q "$PCAP_URL" -O "$PCAP_FILE" || { echo "Failed to download pcap file"; exit 1; }
+    LICENSE_MGR_CONF="/usr/share/ntop/etc/license-manager-client-ntopng.conf"
+    redis-server --daemonize yes
+    mkdir -p /tmp/ntopng-pcap-test
+    exec ntopng --license-mgr "$LICENSE_MGR_CONF" -i "$PCAP_FILE" --shutdown-when-done -d /tmp/ntopng-pcap-test -w 0
 else
     # can use this to run ntopng in the background for example
     exec "$@"
