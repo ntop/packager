@@ -341,7 +341,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                 if [ $? != 0 ]; then
                     echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_license.log for more details]"
                     echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro ${IMG} license-check"
-                    echo "or log into the container with: docker run --rm -it --entrypoint /bin/bash ${IMG}"
+                    echo "or log into the container with: docker run --rm -it --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro --entrypoint /bin/bash ${IMG}"
                     let LICENSE_FAILURES=LICENSE_FAILURES+1
                     LICENSE_FAILED_IMAGES="${IMG} ${LICENSE_FAILED_IMAGES}"
                     if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}_license.log ]]; then
@@ -367,7 +367,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                         if [ $? != 0 ]; then
                             echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log for more details]"
                             echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run --net=host -v ${LICENSE_MGR_FILE}:${LICENSE_MGR_FILE}:ro ${IMG} license-mgr-check"
-                            echo "or log into the container with: docker run --rm -it --entrypoint /bin/bash ${IMG}"
+                            echo "or log into the container with: docker run --rm -it --net=host -v ${LICENSE_MGR_FILE}:${LICENSE_MGR_FILE}:ro --entrypoint /bin/bash ${IMG}"
                             let LICENSE_MGR_FAILURES=LICENSE_MGR_FAILURES+1
                             LICENSE_MGR_FAILED_IMAGES="${IMG} ${LICENSE_MGR_FAILED_IMAGES}"
                             if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log ]]; then
@@ -398,7 +398,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                     if [ $? != 0 ]; then
                         echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_pcap.log for more details]"
                         echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run --net=host ${PCAP_TEST_ARGS} ${IMG} pcap-test"
-                        echo "or log into the container with: docker run --rm -it --entrypoint /bin/bash ${IMG}"
+                        echo "or log into the container with: docker run --rm -it --net=host ${PCAP_TEST_ARGS} --entrypoint /bin/bash ${IMG}"
                         let PCAP_FAILURES=PCAP_FAILURES+1
                         PCAP_FAILED_IMAGES="${IMG} ${PCAP_FAILED_IMAGES}"
                         if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}_pcap.log ]]; then
@@ -424,7 +424,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                         if [ $? != 0 ]; then
                             echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_pcap_license_mgr.log for more details]"
                             echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run --net=host -v ${LICENSE_MGR_FILE}:${LICENSE_MGR_FILE}:ro ${IMG} pcap-test-license-mgr"
-                            echo "or log into the container with: docker run --rm -it --entrypoint /bin/bash ${IMG}"
+                            echo "or log into the container with: docker run --rm -it --net=host -v ${LICENSE_MGR_FILE}:${LICENSE_MGR_FILE}:ro --entrypoint /bin/bash ${IMG}"
                             let PCAP_LICENSE_MGR_FAILURES=PCAP_LICENSE_MGR_FAILURES+1
                             PCAP_LICENSE_MGR_FAILED_IMAGES="${IMG} ${PCAP_LICENSE_MGR_FAILED_IMAGES}"
                             if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}_pcap_license_mgr.log ]]; then
