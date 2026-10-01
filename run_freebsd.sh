@@ -3,6 +3,7 @@
 MAIL_FROM=""
 MAIL_TO=""
 DISCORD_WEBHOOK=""
+TAG="dev"
 
 #############
 
@@ -18,8 +19,9 @@ source ./utils/alerts.sh
 #############
 
 function usage {
-    echo "Usage: run_freebsd.sh [--bootstrap] | [--cleanup] | [ -f=<mail from> -t=<mail to> ]"
+    echo "Usage: run_freebsd.sh [--bootstrap] | [--cleanup] | [-m=stable] [ -f=<mail from> -t=<mail to> ]"
     echo ""
+    echo "-m|--mode=<branch> [dev (default), stable: the version check is run on dev packages only]"
     echo "-b|--bootstrap [run this manually as requires interactive mode]"
     echo "-c|--cleanup "
     echo "-f|--mail-from=<email from>"
@@ -110,6 +112,58 @@ EOF
 
 #############
 
+function check_product {
+    # $1 is the jail name, .e.g, "freebsd11_4"
+    # $2 is the release name, e.g., "11.4-RELEASE"
+    # $3 is the product name, e.g., "ntopng"
+
+    # Functional test
+    jexec $1 /usr/local/bin/bash -c "$3 --version"
+    if jexec $1 /usr/local/bin/bash -c "$3 -h"; then
+	sendSuccess "FreeBSD $2 $3 package TEST completed successfully" "All tests run correctly."
+    else
+	LOG_FILE="${OUT}/$3-${1}.log"
+	jexec $1 /usr/local/bin/bash -c "$3 -h" &> "${LOG_FILE}"
+	sendError "FreeBSD $2 $3 package TEST failed" "Unable to TEST $3 package" "${LOG_FILE}" "2"
+	return
+    fi
+
+    # Version check (dev packages only): the version string should contain today's date (YYMMDD)
+    if [ "$TAG" = "dev" ]; then
+	TODAY=$(date +%y%m%d)
+	LOG_FILE="${OUT}/$3-${1}_version.log"
+	jexec $1 /usr/local/bin/bash -c "$3 --version" &> "${LOG_FILE}"
+	if grep -q "Version:.*\.${TODAY}" "${LOG_FILE}"; then
+	    sendSuccess "FreeBSD $2 $3 package VERSION CHECK completed successfully" "Version string contains ${TODAY}."
+	else
+	    echo "Version check FAILED: expected date ${TODAY} in version string" >> "${LOG_FILE}"
+	    sendError "FreeBSD $2 $3 package VERSION CHECK failed" "" "${LOG_FILE}" "2"
+	fi
+    fi
+
+    # License check: copy the host license file into the jail (skipped when no license file is found on the host)
+    LICENSE_FILE="/usr/local/etc/$3.license"
+    if [ -f "${LICENSE_FILE}" ]; then
+	cp "${LICENSE_FILE}" "/jail/$1${LICENSE_FILE}"
+	LOG_FILE="${OUT}/$3-${1}_license.log"
+	jexec $1 /usr/local/bin/bash -c "$3 --version" &> "${LOG_FILE}"
+	if grep -qi "Invalid license\|License Type:.*Invalid" "${LOG_FILE}"; then
+	    echo "License check FAILED: invalid license detected" >> "${LOG_FILE}"
+	    sendError "FreeBSD $2 $3 package LICENSE CHECK failed" "" "${LOG_FILE}" "2"
+	elif ! grep -q "License Type:\|Edition:" "${LOG_FILE}"; then
+	    echo "License check FAILED: no license type reported" >> "${LOG_FILE}"
+	    sendError "FreeBSD $2 $3 package LICENSE CHECK failed" "" "${LOG_FILE}" "2"
+	else
+	    sendSuccess "FreeBSD $2 $3 package LICENSE CHECK completed successfully" "Valid license reported."
+	fi
+	rm -f "/jail/$1${LICENSE_FILE}"
+    else
+	echo "No license file ${LICENSE_FILE} found on the host, skipping $3 license check"
+    fi
+}
+
+#############
+
 function test_jail {
     # $1 is the jail name, .e.g, "freebsd11_4"
     # $2 is the release name, e.g., "11.4-RELEASE"
@@ -153,32 +207,14 @@ function test_jail {
 
     if pkg -j $1 install -y ntopng; then
 	sysrc -j $1 ntopng_enable="YES"
-
-	# Test the product
-	jexec $1 /usr/local/bin/bash -c "ntopng --version"
-	if jexec $1 /usr/local/bin/bash -c "ntopng -h"; then
-	    sendSuccess "FreeBSD $2 ntopng package TEST completed successfully" "All tests run correctly."
-	else
-	    LOG_FILE="${OUT}/ntopng-${1}.log"
-	    jexec $1 /usr/local/bin/bash -c "ntopng -h" &> "${LOG_FILE}"
-	    sendError "FreeBSD $2 ntopng package TEST failed" "Unable to TEST ntopng package" "${LOG_FILE}" "2"
-	fi
+	check_product $1 $2 ntopng
     else
 	sendError "FreeBSD $2 ntopng package INSTALL failed" "pkg install ntopng failed: package not available in the ntop repository for this release" "" "2"
     fi
 
     if pkg -j $1 install -y nprobe; then
 	sysrc -j $1 nprobe_enable="YES"
-
-	# Test the product
-	jexec $1 /usr/local/bin/bash -c "nprobe --version"
-	if jexec $1 /usr/local/bin/bash -c "nprobe -h"; then
-	    sendSuccess "FreeBSD $2 nprobe package TEST completed successfully" "All tests run correctly."
-	else
-	    LOG_FILE="${OUT}/nprobe-${1}.log"
-	    jexec $1 /usr/local/bin/bash -c "nprobe -h" &> "${LOG_FILE}"
-	    sendError "FreeBSD $2 nprobe package TEST failed" "Unable to TEST nprobe package" "$LOG_FILE" "2"
-	fi
+	check_product $1 $2 nprobe
     else
 	sendError "FreeBSD $2 nprobe package INSTALL failed" "pkg install nprobe failed: package not available in the ntop repository for this release" "" "2"
     fi
@@ -212,9 +248,15 @@ do
 	-c|--cleanup)
 	    #cleanup "freebsd12_4"
 	    #cleanup "freebsd13_5"
-	    cleanup "freebsd14.4"
-	    cleanup "freebsd15.1"
+	    cleanup "freebsd14_4"
+	    cleanup "freebsd15_1"
 	    exit 0
+	    ;;
+
+	-m=*|--mode=*)
+	    if [ "${i#*=}" == "stable" ]; then
+		TAG="stable"
+	    fi
 	    ;;
 
 	-f=*|--mail-from=*)
