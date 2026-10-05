@@ -156,10 +156,41 @@ function check_product {
 	else
 	    sendSuccess "FreeBSD $2 $3 package LICENSE CHECK completed successfully" "Valid license reported."
 	fi
-	rm -f "/jail/$1${LICENSE_FILE}"
     else
 	echo "No license file ${LICENSE_FILE} found on the host, skipping $3 license check"
     fi
+
+    # PCAP test: run with a pcap file and check the exit status (uses the same license of the license test)
+    PCAP_URL="https://raw.githubusercontent.com/ntop/ntopng-e2e-tests/dev/rest/pcap/web_attack_01.pcap"
+    PCAP_FILE="/tmp/pcap-test.pcap"
+    LOG_FILE="${OUT}/$3-${1}_pcap.log"
+    case "$3" in
+	ntopng)
+	    PCAP_CMD="mkdir -p /tmp/ntopng-pcap-test && ntopng -i ${PCAP_FILE} --shutdown-when-done -d /tmp/ntopng-pcap-test -w 0"
+	    ;;
+	nprobe)
+	    PCAP_CMD="nprobe -i ${PCAP_FILE} -n none"
+	    ;;
+	*)
+	    PCAP_CMD=""
+	    ;;
+    esac
+    if [ -n "${PCAP_CMD}" ]; then
+	if ! fetch -q -o "/jail/$1${PCAP_FILE}" "${PCAP_URL}" &> "${LOG_FILE}"; then
+	    echo "Failed to download pcap file ${PCAP_URL}" >> "${LOG_FILE}"
+	    sendError "FreeBSD $2 $3 package PCAP TEST failed" "" "${LOG_FILE}" "2"
+	elif jexec $1 /usr/local/bin/bash -c "${PCAP_CMD}" &> "${LOG_FILE}"; then
+	    sendSuccess "FreeBSD $2 $3 package PCAP TEST completed successfully" "Test pcap file processed correctly."
+	else
+	    if [[ ! -s "${LOG_FILE}" ]]; then
+		echo "No log output during the PCAP TEST phase" > "${LOG_FILE}"
+	    fi
+	    sendError "FreeBSD $2 $3 package PCAP TEST failed" "" "${LOG_FILE}" "2"
+	fi
+	rm -rf "/jail/$1${PCAP_FILE}" "/jail/$1/tmp/ntopng-pcap-test"
+    fi
+
+    rm -f "/jail/$1${LICENSE_FILE}"
 }
 
 #############
