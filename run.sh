@@ -311,8 +311,8 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             # #################################################################################################################
 
             echo -n "Testing ${IMG}... "
-            run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_test.log" ${DOCKER} run ${IMG} test
             FUNCTIONAL_TEST_FAILED=0
+            run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_test.log" ${DOCKER} run ${IMG} test
             if [ $? != 0 ]; then
                 echo "FAIL Failed to execute: ${DOCKER} run ${IMG} test [see ${OUT}/${IMG}${STABLE_SUFFIX}_test.log for more details]"
                 FUNCTIONAL_TEST_FAILED=1
