@@ -6,8 +6,7 @@
 set -e
 
 if [ "$1" = 'test' ]; then
-    cento-ids -h
-    exec cento     -h
+    exec cento-bridge -h
 elif [ "$1" = 'version-check' ]; then
     TODAY=$(date +%y%m%d)
     VERSION_OUTPUT=$(cento --version 2>&1)

@@ -6,7 +6,6 @@
 set -e
 
 if [ "$1" = 'test' ]; then
-    disk2n -h
     exec n2disk -h
 elif [ "$1" = 'version-check' ]; then
     TODAY=$(date +%y%m%d)
