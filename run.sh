@@ -312,9 +312,11 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 
             echo -n "Testing ${IMG}... "
             FUNCTIONAL_TEST_FAILED=0
-            run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_test.log" ${DOCKER} run ${IMG} test
+            run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_test.log" ${DOCKER} run --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro ${IMG} test
             if [ $? != 0 ]; then
-                echo "FAIL Failed to execute: ${DOCKER} run ${IMG} test [see ${OUT}/${IMG}${STABLE_SUFFIX}_test.log for more details]"
+                echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_test.log for more details]"
+                echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro ${IMG} test"
+                echo "or log into the container with: docker run --rm -it --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro --entrypoint /bin/bash ${IMG}"
                 FUNCTIONAL_TEST_FAILED=1
                 let FUNCTIONAL_FAILURES=FUNCTIONAL_FAILURES+1
                 FUNCTIONAL_FAILED_IMAGES="${IMG} ${FUNCTIONAL_FAILED_IMAGES}"
