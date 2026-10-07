@@ -306,17 +306,23 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                 continue
             fi
 
+            LICENSE_FILE="${LICENSE_FILES[$PACKAGES_LIST]}"
+            LICENSE_OPTION=""
+            if [ -n "$LICENSE_FILE" ] && [ -f "$LICENSE_FILE" ]; then
+                LICENSE_OPTION="--net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro"
+            fi
+
             # #################################################################################################################
             # FUNCTIONAL TESTS
             # #################################################################################################################
 
             echo -n "Testing ${IMG}... "
             FUNCTIONAL_TEST_FAILED=0
-            run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_test.log" ${DOCKER} run --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro ${IMG} test
+            run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_test.log" ${DOCKER} run ${LICENSE_OPTION} ${IMG} test
             if [ $? != 0 ]; then
                 echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_test.log for more details]"
-                echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro ${IMG} test"
-                echo "or log into the container with: docker run --rm -it --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro --entrypoint /bin/bash ${IMG}"
+                echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run ${LICENSE_OPTION} ${IMG} test"
+                echo "or log into the container with: docker run --rm -it ${LICENSE_OPTION} --entrypoint /bin/bash ${IMG}"
                 FUNCTIONAL_TEST_FAILED=1
                 let FUNCTIONAL_FAILURES=FUNCTIONAL_FAILURES+1
                 FUNCTIONAL_FAILED_IMAGES="${IMG} ${FUNCTIONAL_FAILED_IMAGES}"
@@ -336,14 +342,13 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             # mounted in the container (skipped when no license file is found for the package).
             # #################################################################################################################
 
-            LICENSE_FILE="${LICENSE_FILES[$PACKAGES_LIST]}"
             if [ -n "$LICENSE_FILE" ] && [ -f "$LICENSE_FILE" ]; then
                 echo -n "License check ${IMG}... "
-                run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_license.log" ${DOCKER} run --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro ${IMG} license-check
+                run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_license.log" ${DOCKER} run ${LICENSE_OPTION} ${IMG} license-check
                 if [ $? != 0 ]; then
                     echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_license.log for more details]"
-                    echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro ${IMG} license-check"
-                    echo "or log into the container with: docker run --rm -it --net=host -v ${LICENSE_FILE}:${LICENSE_FILE}:ro --entrypoint /bin/bash ${IMG}"
+                    echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run ${LICENSE_OPTION} ${IMG} license-check"
+                    echo "or log into the container with: docker run --rm -it ${LICENSE_OPTION} --entrypoint /bin/bash ${IMG}"
                     let LICENSE_FAILURES=LICENSE_FAILURES+1
                     LICENSE_FAILED_IMAGES="${IMG} ${LICENSE_FAILED_IMAGES}"
                     if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}_license.log ]]; then
@@ -389,18 +394,12 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 
             case "$PACKAGES_LIST" in
                 ntopng|nprobe|cento)
-                    PCAP_TEST_ARGS=""
-                    LICENSE_FILE="${LICENSE_FILES[$PACKAGES_LIST]}"
-                    if [ -n "$LICENSE_FILE" ] && [ -f "$LICENSE_FILE" ]; then
-                        PCAP_TEST_ARGS="-v ${LICENSE_FILE}:${LICENSE_FILE}:ro"
-                    fi
-
                     echo -n "Pcap check ${IMG}... "
-                    run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_pcap.log" ${DOCKER} run --net=host ${PCAP_TEST_ARGS} ${IMG} pcap-test
+                    run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_pcap.log" ${DOCKER} run ${LICENSE_OPTION} ${IMG} pcap-test
                     if [ $? != 0 ]; then
                         echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_pcap.log for more details]"
-                        echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run --net=host ${PCAP_TEST_ARGS} ${IMG} pcap-test"
-                        echo "or log into the container with: docker run --rm -it --net=host ${PCAP_TEST_ARGS} --entrypoint /bin/bash ${IMG}"
+                        echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run ${LICENSE_OPTION} ${IMG} pcap-test"
+                        echo "or log into the container with: docker run --rm -it ${LICENSE_OPTION} --entrypoint /bin/bash ${IMG}"
                         let PCAP_FAILURES=PCAP_FAILURES+1
                         PCAP_FAILED_IMAGES="${IMG} ${PCAP_FAILED_IMAGES}"
                         if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}_pcap.log ]]; then
