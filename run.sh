@@ -342,8 +342,8 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             # mounted in the container (skipped when no license file is found for the package).
             # #################################################################################################################
 
+            echo -n "License check ${IMG}... "
             if [ -n "$LICENSE_FILE" ] && [ -f "$LICENSE_FILE" ]; then
-                echo -n "License check ${IMG}... "
                 run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_license.log" ${DOCKER} run ${LICENSE_OPTION} ${IMG} license-check
                 if [ $? != 0 ]; then
                     echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_license.log for more details]"
@@ -358,6 +358,8 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                 else
                     echo "OK"
                 fi
+            else
+                echo "SKIPPED ($LICENSE_FILE not present)"
             fi
 
             # #################################################################################################################
@@ -367,9 +369,9 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 
             case "$PACKAGES_LIST" in
                 ntopng|nprobe|cento|n2disk)
+                    echo -n "License manager check ${IMG}... "
                     LICENSE_MGR_FILE="/usr/share/ntop/etc/license-manager-client-${PACKAGES_LIST}.conf"
                     if [ -f "$LICENSE_MGR_FILE" ]; then
-                        echo -n "License manager check ${IMG}... "
                         run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log" ${DOCKER} run --net=host -v ${LICENSE_MGR_FILE}:${LICENSE_MGR_FILE}:ro ${IMG} license-mgr-check
                         if [ $? != 0 ]; then
                             echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log for more details]"
@@ -384,6 +386,8 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                         else
                             echo "OK"
                         fi
+                    else
+                        echo "SKIPPED ($LICENSE_MGR_FILE not present)"
                     fi
                     ;;
             esac
@@ -418,9 +422,9 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 
             case "$PACKAGES_LIST" in
                 ntopng|nprobe|cento)
+                    echo -n "Pcap check (License Manager) ${IMG}... "
                     LICENSE_MGR_FILE="/usr/share/ntop/etc/license-manager-client-${PACKAGES_LIST}.conf"
                     if [ -f "$LICENSE_MGR_FILE" ]; then
-                        echo -n "Pcap check (License Manager) ${IMG}... "
                         run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_pcap_license_mgr.log" ${DOCKER} run --net=host -v ${LICENSE_MGR_FILE}:${LICENSE_MGR_FILE}:ro ${IMG} pcap-test-license-mgr
                         if [ $? != 0 ]; then
                             echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_pcap_license_mgr.log for more details]"
@@ -435,6 +439,8 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                         else
                             echo "OK"
                         fi
+                    else
+                        echo "SKIPPED ($LICENSE_MGR_FILE not present)"
                     fi
                     ;;
             esac
