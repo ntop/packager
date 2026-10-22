@@ -24,6 +24,9 @@ declare -A LICENSE_FILES=(
     [nedge]="/etc/nedge.license"
 )
 
+# License Manager client certificate
+LICENSE_MGR_CERT="/etc/licensemgr.bin"
+
 # Import functions to send out alerts
 source utils/alerts.sh
 
@@ -371,12 +374,15 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                 ntopng|nprobe|cento|n2disk)
                     echo -n "License manager check ${IMG}... "
                     LICENSE_MGR_FILE="/usr/share/ntop/etc/license-manager-client-${PACKAGES_LIST}.conf"
-                    if [ -f "$LICENSE_MGR_FILE" ]; then
-                        run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log" ${DOCKER} run --net=host -v ${LICENSE_MGR_FILE}:${LICENSE_MGR_FILE}:ro ${IMG} license-mgr-check
+                    LICENSE_MGR_OPTION="--net=host -v ${LICENSE_MGR_FILE}:${LICENSE_MGR_FILE}:ro -v ${LICENSE_MGR_CERT}:${LICENSE_MGR_CERT}:ro"
+                    if [ ! -f "$LICENSE_MGR_CERT" ]; then
+                        echo "SKIPPED ($LICENSE_MGR_CERT not present)"
+                    elif [ -f "$LICENSE_MGR_FILE" ]; then
+                        run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log" ${DOCKER} run ${LICENSE_MGR_OPTION} ${IMG} license-mgr-check
                         if [ $? != 0 ]; then
                             echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log for more details]"
-                            echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run --net=host -v ${LICENSE_MGR_FILE}:${LICENSE_MGR_FILE}:ro ${IMG} license-mgr-check"
-                            echo "or log into the container with: docker run --rm -it --net=host -v ${LICENSE_MGR_FILE}:${LICENSE_MGR_FILE}:ro --entrypoint /bin/bash ${IMG}"
+                            echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run ${LICENSE_MGR_OPTION} ${IMG} license-mgr-check"
+                            echo "or log into the container with: docker run --rm -it ${LICENSE_MGR_OPTION} --entrypoint /bin/bash ${IMG}"
                             let LICENSE_MGR_FAILURES=LICENSE_MGR_FAILURES+1
                             LICENSE_MGR_FAILED_IMAGES="${IMG} ${LICENSE_MGR_FAILED_IMAGES}"
                             if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log ]]; then
@@ -424,12 +430,15 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                 ntopng|nprobe|cento)
                     echo -n "Pcap check (License Manager) ${IMG}... "
                     LICENSE_MGR_FILE="/usr/share/ntop/etc/license-manager-client-${PACKAGES_LIST}.conf"
-                    if [ -f "$LICENSE_MGR_FILE" ]; then
-                        run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_pcap_license_mgr.log" ${DOCKER} run --net=host -v ${LICENSE_MGR_FILE}:${LICENSE_MGR_FILE}:ro ${IMG} pcap-test-license-mgr
+                    LICENSE_MGR_OPTION="--net=host -v ${LICENSE_MGR_FILE}:${LICENSE_MGR_FILE}:ro -v ${LICENSE_MGR_CERT}:${LICENSE_MGR_CERT}:ro"
+                    if [ ! -f "$LICENSE_MGR_CERT" ]; then
+                        echo "SKIPPED ($LICENSE_MGR_CERT not present)"
+                    elif [ -f "$LICENSE_MGR_FILE" ]; then
+                        run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_pcap_license_mgr.log" ${DOCKER} run ${LICENSE_MGR_OPTION} ${IMG} pcap-test-license-mgr
                         if [ $? != 0 ]; then
                             echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_pcap_license_mgr.log for more details]"
-                            echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run --net=host -v ${LICENSE_MGR_FILE}:${LICENSE_MGR_FILE}:ro ${IMG} pcap-test-license-mgr"
-                            echo "or log into the container with: docker run --rm -it --net=host -v ${LICENSE_MGR_FILE}:${LICENSE_MGR_FILE}:ro --entrypoint /bin/bash ${IMG}"
+                            echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run ${LICENSE_MGR_OPTION} ${IMG} pcap-test-license-mgr"
+                            echo "or log into the container with: docker run --rm -it ${LICENSE_MGR_OPTION} --entrypoint /bin/bash ${IMG}"
                             let PCAP_LICENSE_MGR_FAILURES=PCAP_LICENSE_MGR_FAILURES+1
                             PCAP_LICENSE_MGR_FAILED_IMAGES="${IMG} ${PCAP_LICENSE_MGR_FAILED_IMAGES}"
                             if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}_pcap_license_mgr.log ]]; then
