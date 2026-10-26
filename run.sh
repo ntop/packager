@@ -12,6 +12,7 @@ TAG="development"
 STABLE_SUFFIX=""
 PRINT_VERSION=0
 VERBOSE=0
+STOP_ON_FAILURE=0
 
 # Paths of the license files on the host to be mounted in each container for testing the license.
 # Packages with no entry here will be skipped.
@@ -31,7 +32,7 @@ LICENSE_MGR_CERT="/etc/licensemgr.bin"
 source utils/alerts.sh
 
 function usage {
-    echo "Usage: run.sh [--cleanup] | [-m=stable] [-f=<mail from>] [-t=<mail to>] [-d=<discord webhook>] [-s=<discord webhook>] [-r=<release>] [-p=<package>]"
+    echo "Usage: run.sh [--cleanup] | [-m=stable] [-f=<mail from>] [-t=<mail to>] [-d=<discord webhook>] [-s=<discord webhook>] [-r=<release>] [-p=<package>] [-x]"
     echo ""
     echo "-m=<branch>                        : Select branch."
     echo "                                     Available branches: dev (default), stable."
@@ -45,6 +46,7 @@ function usage {
     echo "-V|--print-version                 : Skip all tests; just builds each image and prints \`--version\` (incl. system ID)"
     echo "                                     via --net=host, so the system ID matches the host's"
     echo "-v|--verbose                       : Print build/test output to the console (in addition to log files)"
+    echo "-x|--stop-on-failure               : Stop tests on failure. Keep the failed container to log into it (run --cleanup when done)"
     echo ""
     echo "This tool will build some empty docker containers where ntop packages"
     echo "will be installed. This tool will make some tests and report"
@@ -85,6 +87,34 @@ function run_cmd_logged {
         "$@" &> "${logfile}"
         return $?
     fi
+}
+
+# Called on test failure
+# The failed container is kept and the script exits without cleanup so that the user can log into it and reproduce the issue
+# Usage: stop_on_failure build|run [<docker run options>]
+function stop_on_failure {
+    local phase="$1"
+    local opts="$2"
+
+    if [ "$STOP_ON_FAILURE" -eq 0 ]; then
+        return
+    fi
+
+    echo "Stopping on first failure (containers and images are not removed, run ./run.sh --cleanup when done)"
+
+    if [ "$phase" = "build" ]; then
+        echo "Image ${IMG} failed to build, see ${OUT}/${IMG}${STABLE_SUFFIX}.log"
+        echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} ."
+    else
+        local cont=$(${DOCKER} ps -lq)
+        if [ -n "$cont" ] && ${DOCKER} commit ${cont} ${IMG}-failed > /dev/null; then
+            echo "Failed container: ${cont} (show output with: ${DOCKER} logs ${cont})"
+            echo "Log into the failed container state with: ${DOCKER} run --rm -it ${opts} --entrypoint /bin/bash ${IMG}-failed"
+        fi
+        echo "Log into a clean container with: ${DOCKER} run --rm -it ${opts} --entrypoint /bin/bash ${IMG}"
+    fi
+
+    exit 1
 }
 
 #############
@@ -134,6 +164,10 @@ do
 
         -v|--verbose)
             VERBOSE=1
+            ;;
+
+        -x|--stop-on-failure)
+            STOP_ON_FAILURE=1
             ;;
 
         -h|--help)
@@ -293,6 +327,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                 echo "No log output during the BUILD phase" >  "${OUT}/${IMG}${STABLE_SUFFIX}.log"
             fi
             sendError "Packages INSTALLATION failed on ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}.log" "2"
+            stop_on_failure build
         else
             IMAGES="${IMAGES} ${IMG}"
 
@@ -334,6 +369,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                     echo "No log output during the TEST phase" > "${OUT}/${IMG}${STABLE_SUFFIX}_test.log"
                 fi
                 sendError "Packages TEST failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}_test.log" "2"
+                stop_on_failure run "${LICENSE_OPTION}"
             else
                 echo "OK"
             fi
@@ -358,6 +394,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                         echo "No log output during the LICENSE CHECK phase" > "${OUT}/${IMG}${STABLE_SUFFIX}_license.log"
                     fi
                     sendError "Packages LICENSE CHECK failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}_license.log" "2"
+                    stop_on_failure run "${LICENSE_OPTION}"
                 else
                     echo "OK"
                 fi
@@ -389,6 +426,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                                 echo "No log output during the LICENSE MANAGER CHECK phase" > "${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log"
                             fi
                             sendError "Packages LICENSE MANAGER CHECK failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log" "2"
+                            stop_on_failure run "${LICENSE_MGR_OPTION}"
                         else
                             echo "OK"
                         fi
@@ -416,6 +454,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                             echo "No log output during the PCAP TEST phase" > "${OUT}/${IMG}${STABLE_SUFFIX}_pcap.log"
                         fi
                         sendError "Packages PCAP TEST failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}_pcap.log" "2"
+                        stop_on_failure run "${LICENSE_OPTION}"
                     else
                         echo "OK"
                     fi
@@ -445,6 +484,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                                 echo "No log output during the PCAP TEST (License Manager) phase" > "${OUT}/${IMG}${STABLE_SUFFIX}_pcap_license_mgr.log"
                             fi
                             sendError "Packages PCAP TEST (License Manager) failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}_pcap_license_mgr.log" "2"
+                            stop_on_failure run "${LICENSE_MGR_OPTION}"
                         else
                             echo "OK"
                         fi
@@ -471,6 +511,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                         echo "No log output during the VERSION CHECK phase" > "${OUT}/${IMG}_version.log"
                     fi
                     sendError "Packages VERSION CHECK failed for ${IMG} ${TAG}" "" "${OUT}/${IMG}_version.log" "2"
+                    stop_on_failure run
                 else
                     echo "OK"
                 fi
