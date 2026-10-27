@@ -20,6 +20,11 @@ RUN dnf -y install https://rpms.remirepo.net/enterprise/remi-release-MAJORVERSIO
     dnf -y install redis && \
     systemctl enable redis
 
+# PACKAGE LAYERS: everything below is built on top of the per-OS base image (see run.sh)
+# Refresh metadata as the base image may have been built some time ago
+RUN yum clean all && \
+    yum -y makecache
+
 RUN yum -y install PACKAGES_LIST
 RUN yum -y erase PACKAGES_LIST
 

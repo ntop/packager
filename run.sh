@@ -91,7 +91,7 @@ function run_cmd_logged {
 
 # Called on test failure
 # The failed container is kept and the script exits without cleanup so that the user can log into it and reproduce the issue
-# Usage: stop_on_failure build|run [<docker run options>]
+# Usage: stop_on_failure build <image> <dockerfile> | run [<docker run options>]
 function stop_on_failure {
     local phase="$1"
     local opts="$2"
@@ -103,8 +103,10 @@ function stop_on_failure {
     echo "Stopping on first failure (containers and images are not removed, run ./run.sh --cleanup when done)"
 
     if [ "$phase" = "build" ]; then
-        echo "Image ${IMG} failed to build, see ${OUT}/${IMG}${STABLE_SUFFIX}.log"
-        echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} ."
+        local img="$2"
+        local dockerfile="$3"
+        echo "Image ${img} failed to build, see ${OUT}/${img}${STABLE_SUFFIX}.log"
+        echo "Reproduce with: ${DOCKER} build -t ${img} -f ${dockerfile} ."
     else
         local cont=$(${DOCKER} ps -lq)
         if [ -n "$cont" ] && ${DOCKER} commit ${cont} ${IMG}-failed > /dev/null; then
@@ -115,6 +117,40 @@ function stop_on_failure {
     fi
 
     exit 1
+}
+
+# Build a docker image (with retries), reporting an INSTALLATION failure if it does not build
+# Usage: build_image <image> <dockerfile>
+function build_image {
+    local img="$1"
+    local dockerfile="$2"
+    local logfile="${OUT}/${img}${STABLE_SUFFIX}.log"
+
+    MAX_ATTEMPTS=2
+    attempt=1
+    while [ $attempt -le $MAX_ATTEMPTS ]
+    do
+        echo "Running ${DOCKER} build --no-cache -t ${img} -f ${dockerfile} ."
+
+        run_cmd_logged "${logfile}" ${DOCKER} build --no-cache -t ${img} -f ${dockerfile} .
+
+        if [ $? == 0 ]; then return 0; fi
+
+        let attempt=attempt+1
+        echo -e "Attempt #$attempt.."
+    done
+
+    echo "FAIL Failed ${DOCKER} build -t ${img} -f ${dockerfile} . [see ${logfile} for more details]"
+    let INSTALLATION_FAILURES=INSTALLATION_FAILURES+1
+    INSTALLATION_FAILED_IMAGES="${img} ${INSTALLATION_FAILED_IMAGES}"
+    # Sending mail with log
+    if [[ ! -s ${logfile} ]]; then
+        echo "No log output during the BUILD phase" > "${logfile}"
+    fi
+    sendError "Packages INSTALLATION failed on ${img} ${TAG}" "" "${logfile}" "2"
+    stop_on_failure build ${img} ${dockerfile}
+
+    return 1
 }
 
 #############
@@ -244,6 +280,13 @@ cleanup
 for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
     DOCKERFILE_RELEASE="${DOCKERFILE_GENERIC##*.}"
 
+    # Base image with the OS setup and the ntop repository (everything above the "# PACKAGE LAYERS" marker
+    # in the seed), shared by all package images of this release. It is built lazily, only when at least
+    # one package of this release is going to be tested.
+    BASE_IMG="${DOCKERFILE_RELEASE}.${TAG}.base"
+    BASE_DOCKERFILE=${OUT}/Dockerfile.${BASE_IMG}
+    BASE_STATUS="" # "", "ok" or "failed"
+
     for ENTRYPOINT in entrypoints/*.sh; do
         ENTRYPOINT_SH=`basename ${ENTRYPOINT}`
         PACKAGES_LIST=`cat $ENTRYPOINT | grep TEST_PACKAGES | cut -d ':' -f 2 | xargs`
@@ -296,38 +339,38 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
         fi
 
         let TESTS_RUN=TESTS_RUN+1
+
+        if [ -z "$BASE_STATUS" ]; then
+            echo "Preparing base docker image ${BASE_IMG}"
+
+            sed -e '/^# PACKAGE LAYERS/,$d' ${DOCKERFILE_GENERIC} > ${BASE_DOCKERFILE}
+
+            if build_image ${BASE_IMG} ${BASE_DOCKERFILE}; then
+                BASE_STATUS="ok"
+            else
+                BASE_STATUS="failed"
+            fi
+        fi
+
+        if [ "$BASE_STATUS" = "failed" ]; then
+            echo "SKIPPED ${IMG} (base image ${BASE_IMG} failed to build)"
+            continue
+        fi
+
         echo "Preparing docker image ${IMG} [packages: $PACKAGES_LIST] [entrypoint: $ENTRYPOINT]"
 
-        sed -e "s:PACKAGES_LIST:${PACKAGES_LIST}:g" \
+        echo "FROM ${BASE_IMG}" > ${DOCKERFILE}
+        sed -e '1,/^# PACKAGE LAYERS/d' \
+            -e "s:PACKAGES_LIST:${PACKAGES_LIST}:g" \
             -e "s:ENTRYPOINT_PATH:${ENTRYPOINT}:g" \
             -e "s:ENTRYPOINT_SH:${ENTRYPOINT_SH}:g" \
-            ${DOCKERFILE_GENERIC} > ${DOCKERFILE}
+            ${DOCKERFILE_GENERIC} >> ${DOCKERFILE}
 
-        MAX_ATTEMPTS=2
-        attempt=1
-        while [ $attempt -le $MAX_ATTEMPTS ]
-        do
-            echo "Running ${DOCKER} build --no-cache -t ${IMG} -f ${DOCKERFILE} ."
+        # Command to rebuild this image from scratch, printed in the "Reproduce with" hints
+        REPRO_BUILD="${DOCKER} build -t ${BASE_IMG} -f ${BASE_DOCKERFILE} . && ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} ."
 
-            run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}.log" ${DOCKER} build --no-cache -t ${IMG} -f ${DOCKERFILE} .
-
-            if [ $? == 0 ]; then break; fi
-
-            let attempt=attempt+1
-            echo -e "Attempt #$attempt.."
-        done
-
-        if [ "$attempt" -gt "$MAX_ATTEMPTS" ];
-        then
-            echo "FAIL Failed ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . [see ${OUT}/${IMG}${STABLE_SUFFIX}.log for more details]"
-            let INSTALLATION_FAILURES=INSTALLATION_FAILURES+1
-            INSTALLATION_FAILED_IMAGES="${IMG} ${INSTALLATION_FAILED_IMAGES}"
-            # Sending mail with log
-            if [[ ! -s ${OUT}/${IMG}${STABLE_SUFFIX}.log ]]; then
-                echo "No log output during the BUILD phase" >  "${OUT}/${IMG}${STABLE_SUFFIX}.log"
-            fi
-            sendError "Packages INSTALLATION failed on ${IMG} ${TAG}" "" "${OUT}/${IMG}${STABLE_SUFFIX}.log" "2"
-            stop_on_failure build
+        if ! build_image ${IMG} ${DOCKERFILE}; then
+            continue
         else
             IMAGES="${IMAGES} ${IMG}"
 
@@ -359,7 +402,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
             run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_test.log" ${DOCKER} run ${LICENSE_OPTION} ${IMG} test
             if [ $? != 0 ]; then
                 echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_test.log for more details]"
-                echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run ${LICENSE_OPTION} ${IMG} test"
+                echo "Reproduce with: ${REPRO_BUILD} && ${DOCKER} run ${LICENSE_OPTION} ${IMG} test"
                 echo "or log into the container with: docker run --rm -it ${LICENSE_OPTION} --entrypoint /bin/bash ${IMG}"
                 FUNCTIONAL_TEST_FAILED=1
                 let FUNCTIONAL_FAILURES=FUNCTIONAL_FAILURES+1
@@ -386,7 +429,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                 run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_license.log" ${DOCKER} run ${LICENSE_OPTION} ${IMG} license-check
                 if [ $? != 0 ]; then
                     echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_license.log for more details]"
-                    echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run ${LICENSE_OPTION} ${IMG} license-check"
+                    echo "Reproduce with: ${REPRO_BUILD} && ${DOCKER} run ${LICENSE_OPTION} ${IMG} license-check"
                     echo "or log into the container with: docker run --rm -it ${LICENSE_OPTION} --entrypoint /bin/bash ${IMG}"
                     let LICENSE_FAILURES=LICENSE_FAILURES+1
                     LICENSE_FAILED_IMAGES="${IMG} ${LICENSE_FAILED_IMAGES}"
@@ -418,7 +461,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                         run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log" ${DOCKER} run ${LICENSE_MGR_OPTION} ${IMG} license-mgr-check
                         if [ $? != 0 ]; then
                             echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_license_mgr.log for more details]"
-                            echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run ${LICENSE_MGR_OPTION} ${IMG} license-mgr-check"
+                            echo "Reproduce with: ${REPRO_BUILD} && ${DOCKER} run ${LICENSE_MGR_OPTION} ${IMG} license-mgr-check"
                             echo "or log into the container with: docker run --rm -it ${LICENSE_MGR_OPTION} --entrypoint /bin/bash ${IMG}"
                             let LICENSE_MGR_FAILURES=LICENSE_MGR_FAILURES+1
                             LICENSE_MGR_FAILED_IMAGES="${IMG} ${LICENSE_MGR_FAILED_IMAGES}"
@@ -446,7 +489,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                     run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_pcap.log" ${DOCKER} run ${LICENSE_OPTION} ${IMG} pcap-test
                     if [ $? != 0 ]; then
                         echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_pcap.log for more details]"
-                        echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run ${LICENSE_OPTION} ${IMG} pcap-test"
+                        echo "Reproduce with: ${REPRO_BUILD} && ${DOCKER} run ${LICENSE_OPTION} ${IMG} pcap-test"
                         echo "or log into the container with: docker run --rm -it ${LICENSE_OPTION} --entrypoint /bin/bash ${IMG}"
                         let PCAP_FAILURES=PCAP_FAILURES+1
                         PCAP_FAILED_IMAGES="${IMG} ${PCAP_FAILED_IMAGES}"
@@ -476,7 +519,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                         run_cmd_logged "${OUT}/${IMG}${STABLE_SUFFIX}_pcap_license_mgr.log" ${DOCKER} run ${LICENSE_MGR_OPTION} ${IMG} pcap-test-license-mgr
                         if [ $? != 0 ]; then
                             echo "FAIL [see ${OUT}/${IMG}${STABLE_SUFFIX}_pcap_license_mgr.log for more details]"
-                            echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run ${LICENSE_MGR_OPTION} ${IMG} pcap-test-license-mgr"
+                            echo "Reproduce with: ${REPRO_BUILD} && ${DOCKER} run ${LICENSE_MGR_OPTION} ${IMG} pcap-test-license-mgr"
                             echo "or log into the container with: docker run --rm -it ${LICENSE_MGR_OPTION} --entrypoint /bin/bash ${IMG}"
                             let PCAP_LICENSE_MGR_FAILURES=PCAP_LICENSE_MGR_FAILURES+1
                             PCAP_LICENSE_MGR_FAILED_IMAGES="${IMG} ${PCAP_LICENSE_MGR_FAILED_IMAGES}"
@@ -503,7 +546,7 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
                 run_cmd_logged "${OUT}/${IMG}_version.log" ${DOCKER} run ${IMG} version-check
                 if [ $? != 0 ]; then
                     echo "FAIL [see ${OUT}/${IMG}_version.log for more details]"
-                    echo "Reproduce with: ${DOCKER} build -t ${IMG} -f ${DOCKERFILE} . && ${DOCKER} run ${IMG} version-check"
+                    echo "Reproduce with: ${REPRO_BUILD} && ${DOCKER} run ${IMG} version-check"
                     echo "or log into the container with: docker run --rm -it --entrypoint /bin/bash ${IMG}"
                     let VERSION_FAILURES=VERSION_FAILURES+1
                     VERSION_FAILED_IMAGES="${IMG} ${VERSION_FAILED_IMAGES}"

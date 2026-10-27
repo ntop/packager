@@ -16,6 +16,7 @@ RUN apt-get update && \
     apt install -y ./apt-ntopSTABLE.deb && \
     rm -f apt-ntopSTABLE.deb
 
+# PACKAGE LAYERS: everything below is built on top of the per-OS base image (see run.sh)
 RUN apt-get clean all && \
     apt-get update
 
