@@ -42,7 +42,7 @@ function usage {
     echo "                                     Available packages: cento, n2disk, nprobe, ntopng, nedge, nscrub, ntap, pfring."
     echo "-d|--discord-webhook=<url>         : Discord webhook used for per-test and overall result alerts."
     echo "-s|--discord-summary-webhook=<url> : Secondary Discord webhook for summary message (on failures only)."
-    echo "-c|--cleanup                       : Clear all docker images and containers"
+    echo "-c|--cleanup                       : Clear all docker images and containers (of all runs, not only the ones created by run.sh)"
     echo "-V|--print-version                 : Skip all tests; just builds each image and prints \`--version\` (incl. system ID)"
     echo "                                     via --net=host, so the system ID matches the host's"
     echo "-v|--verbose                       : Print build/test output to the console (in addition to log files)"
@@ -54,7 +54,29 @@ function usage {
     exit 0
 }
 
+# Remove containers and images created by this run instance only (identified by RUN_LABEL),
+# so that runs executed in parallel (e.g. dev and stable with make -j) do not interfere
 function cleanup {
+    CONT=$(${DOCKER} ps -a -q --filter "label=${RUN_LABEL}" | xargs)
+    if [[ $CONT ]]; then
+        echo "Cleaning up containers: ${CONT}"
+        ${DOCKER} rm -f ${CONT}
+    fi
+
+    IMGS=$(${DOCKER} images -q --filter "label=${RUN_LABEL}" | sort -u | xargs)
+    if [[ $IMGS ]]; then
+        echo "Cleaning up images: ${IMGS}"
+        ${DOCKER} rmi -f ${IMGS}
+    fi
+
+    # Remove dangling images (e.g. previous versions of the upstream OS images) and the unused
+    # build cache; images and cache in use by other runs are not removed
+    ${DOCKER} image prune -f > /dev/null
+    ${DOCKER} builder prune -f > /dev/null
+}
+
+# Remove all containers and images (including those not created by this script)
+function cleanup_all {
     \rm -f *~ &> /dev/null
 
     CONT=$(${DOCKER} ps -a -q | xargs)
@@ -108,7 +130,7 @@ function stop_on_failure {
         echo "Image ${img} failed to build, see ${OUT}/${img}${STABLE_SUFFIX}.log"
         echo "Reproduce with: ${DOCKER} build -t ${img} -f ${dockerfile} ."
     else
-        local cont=$(${DOCKER} ps -lq)
+        local cont=$(${DOCKER} ps -lq --filter "label=${RUN_LABEL}")
         if [ -n "$cont" ] && ${DOCKER} commit ${cont} ${IMG}-failed > /dev/null; then
             echo "Failed container: ${cont} (show output with: ${DOCKER} logs ${cont})"
             echo "Log into the failed container state with: ${DOCKER} run --rm -it ${opts} --entrypoint /bin/bash ${IMG}-failed"
@@ -120,19 +142,22 @@ function stop_on_failure {
 }
 
 # Build a docker image (with retries), reporting an INSTALLATION failure if it does not build
-# Usage: build_image <image> <dockerfile>
+# The image is labeled with RUN_LABEL so that cleanup only removes images (and the containers
+# instantiated from them, which inherit the label) created by this run
+# Usage: build_image <image> <dockerfile> [<extra docker build options>]
 function build_image {
     local img="$1"
     local dockerfile="$2"
+    local opts="$3"
     local logfile="${OUT}/${img}${STABLE_SUFFIX}.log"
 
     MAX_ATTEMPTS=2
     attempt=1
     while [ $attempt -le $MAX_ATTEMPTS ]
     do
-        echo "Running ${DOCKER} build --no-cache -t ${img} -f ${dockerfile} ."
+        echo "Running ${DOCKER} build --no-cache ${opts} -t ${img} -f ${dockerfile} ."
 
-        run_cmd_logged "${logfile}" ${DOCKER} build --no-cache -t ${img} -f ${dockerfile} .
+        run_cmd_logged "${logfile}" ${DOCKER} build --no-cache ${opts} --label "${RUN_LABEL}" -t ${img} -f ${dockerfile} .
 
         if [ $? == 0 ]; then return 0; fi
 
@@ -190,7 +215,7 @@ do
             ;;
 
         -c|--cleanup)
-            cleanup
+            cleanup_all
             exit 0
             ;;
 
@@ -224,6 +249,9 @@ fi
 if [ -z "$DISCORD_WEBHOOK" ] ; then
     echo "Warning: please specify -d=<discord webhook url> to send alerts to Discord"
 fi
+
+# Label applied to all images built by this run instance (dev and stable runs can be executed in parallel)
+RUN_LABEL="org.ntop.packager.tag=${TAG}"
 
 OUT="out-${TAG}"
 /bin/rm -rf ${OUT}
@@ -270,7 +298,7 @@ PCAP_LICENSE_MGR_FAILED_IMAGES=""
 IMAGES=""
 TESTS_RUN=0
 
-# Cleanup all containers/images
+# Cleanup containers/images left by a previous run of this instance
 cleanup
 
 # ########################################################################################################################
@@ -345,7 +373,8 @@ for DOCKERFILE_GENERIC in ${OUT}/generic/Dockerfile.*; do
 
             sed -e '/^# PACKAGE LAYERS/,$d' ${DOCKERFILE_GENERIC} > ${BASE_DOCKERFILE}
 
-            if build_image ${BASE_IMG} ${BASE_DOCKERFILE}; then
+            # --pull: always use the latest upstream OS image (they are not removed by cleanup)
+            if build_image ${BASE_IMG} ${BASE_DOCKERFILE} --pull; then
                 BASE_STATUS="ok"
             else
                 BASE_STATUS="failed"
